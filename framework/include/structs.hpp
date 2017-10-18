@@ -45,14 +45,19 @@ struct shader_program {
   std::map<std::string, GLint> u_locs{};
 };
 
+// planet struct with values size, rotation speed, distance & name
 struct planet {
-  planet(float const& size, float const& rotation_speed, float const& distance)
+  planet(float const& size, float const& rotation_speed, float const& distance, std::string const& name)
    :size_{size}
    ,rotation_speed_{rotation_speed}
-   ,distance_{distance} {}
+   ,distance_{distance}
+   ,name_{name} {}
 
   float size_;
+  //rotation per time unit around sun
   float rotation_speed_;
+  //distance from center (sun)
   float distance_;
+  std::string name_;
 };
 #endif
