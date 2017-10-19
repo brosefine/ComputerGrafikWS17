@@ -4,6 +4,7 @@
 #include "application.hpp"
 #include "model.hpp"
 #include "structs.hpp"
+#include <map>
 
 // gpu representation of model
 class ApplicationSolar : public Application {
@@ -23,7 +24,7 @@ class ApplicationSolar : public Application {
   void mouseCallback(double pos_x, double pos_y);
 
   //calculate and upload model-/normal-matrix for given planet
-  void upload_planet_transforms(planet const& planet);
+  void upload_planet_transforms(planet const& planet) const;
 
   // draw all objects
   void render() const;
@@ -36,7 +37,7 @@ class ApplicationSolar : public Application {
   // cpu representation of model
   model_object planet_object;
   // planet representations
-  std::map<std:string, planet> planets;
+  std::map<std::string, planet> planets;
 };
 
 #endif
