@@ -47,17 +47,31 @@ struct shader_program {
 
 // planet struct with values size, rotation speed, distance & name
 struct planet {
-  planet(float const& size, float const& rotation_speed, float const& distance, std::string const& name)
+  planet(float const& size, float const& rotation_speed, float const& distance)
    :size_{size}
    ,rotation_speed_{rotation_speed}
-   ,distance_{distance}
-   ,name_{name} {}
+   ,distance_{distance}{}
 
   float size_;
   //rotation per time unit around sun
   float rotation_speed_;
   //distance from center (sun)
   float distance_;
-  std::string name_;
+};
+
+  struct moon {
+  moon(float const& size, float const& rotation_speed, float const& distance, std::string const& planet)
+   :size_{size}
+   ,rotation_speed_{rotation_speed}
+   ,distance_{distance}
+   ,planet_{planet}{}
+
+  float size_;
+  //rotation per time unit around sun
+  float rotation_speed_;
+  //distance from center (sun)
+  float distance_;
+  //planet the moon belongs to
+  std::string planet_;
 };
 #endif

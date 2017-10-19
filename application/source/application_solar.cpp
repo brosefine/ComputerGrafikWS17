@@ -23,11 +23,22 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  :Application{resource_path}
  ,planet_object{}
  ,planets{}
+ ,moons{}
 {
   initializeGeometry();
   initializeShaderPrograms();
-  planet sun{1.0f, 1.0f, 1.0f, "sun"};
-  planets.insert(std::pair<std::string, planet>("sun", sun));
+  //add planets and moon
+  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f}));
+  planets.insert(std::pair<std::string, planet>("merkur", {0.25f, 1.0f, 3.0f}));
+  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.74f, 5.0f}));
+  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.63f, 7.0f}));
+  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.51f, 9.0f}));
+  planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.27f, 11.0f}));
+  planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.20f, 13.0f}));
+  planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.14f, 15.0f}));
+  planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.11f, 17.0f}));
+
+  moons.insert(std::pair<std::string, moon>("moonmoon", {0.04f, 6.0f, 1.0f, "earth"}));
 }
 
 void ApplicationSolar::render() const {
@@ -45,14 +56,57 @@ void ApplicationSolar::render() const {
     glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
   }
 
+  for(auto& i : moons){
+    //render planet
+    upload_moon_transforms(i.second);
+
+    // bind the VAO to draw
+    glBindVertexArray(planet_object.vertex_AO);
+
+    // draw bound vertex array using bound shader
+    glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+  }
+
 }
 
 void ApplicationSolar::updateView() {
   // vertices are transformed in camera space, so camera transform must be inverted
+  //m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, 10.0f});
   glm::fmat4 view_matrix = glm::inverse(m_view_transform);
   // upload matrix to gpu
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ViewMatrix"),
                      1, GL_FALSE, glm::value_ptr(view_matrix));
+}
+
+void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
+  //get moons planet
+  auto iter = planets.find(moon.planet_);
+  if(iter == planets.end()){
+    return;
+  }
+  planet planet = iter->second;
+
+  //render and upload planets
+  float s = moon.size_;
+  float r = moon.rotation_speed_;
+  float d = moon.distance_;
+
+  float p_r = planet.rotation_speed_;
+  float p_d = planet.distance_;
+
+  //transform model matrix according to moon and planet attributes
+  glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(p_r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
+  model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*p_d});
+  model_matrix = glm::rotate(model_matrix, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
+  model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
+  model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
+  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
+                     1, GL_FALSE, glm::value_ptr(model_matrix));
+
+  // extra matrix for normal transformation to keep them orthogonal to surface
+  glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
+  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
+                     1, GL_FALSE, glm::value_ptr(normal_matrix));
 }
 
 void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
@@ -61,6 +115,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   float r = planet.rotation_speed_;
   float d = planet.distance_;
 
+  //transform model matrix accoding to planet attributes
   glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
@@ -92,12 +147,24 @@ void ApplicationSolar::uploadUniforms() {
 
 // handle key input
 void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) {
+  //shifts camera position to front, negative z
   if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, -0.1f});
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, -1.0f});
     updateView();
   }
+  //shifts camera position backwards, positive z
   else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, 0.1f});
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, 1.0f});
+    updateView();
+  }
+  //shifts camera position left, negative x
+   else if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{-1.0f, 0.0f, 0.0f});
+    updateView();
+  }
+  //shifts camera position right, positive x
+   else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{1.0f, 0.0f, 0.0f});
     updateView();
   }
 }
@@ -105,6 +172,11 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
 //handle delta mouse movement input
 void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
   // mouse handling
+  float x = (float)pos_y;
+  float y = (float)pos_x;
+  //rotate camera view according to mouse movement
+  m_view_transform = glm::rotate(m_view_transform, -0.01f, glm::fvec3{x, y, 0.0f});
+  updateView();
 }
 
 // load shader programs

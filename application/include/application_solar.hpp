@@ -26,6 +26,9 @@ class ApplicationSolar : public Application {
   //calculate and upload model-/normal-matrix for given planet
   void upload_planet_transforms(planet const& planet) const;
 
+    //calculate and upload model-/normal-matrix for given moon
+  void upload_moon_transforms(moon const& moon) const;
+
   // draw all objects
   void render() const;
 
@@ -36,8 +39,9 @@ class ApplicationSolar : public Application {
 
   // cpu representation of model
   model_object planet_object;
-  // planet representations
+  // planet and moon representations
   std::map<std::string, planet> planets;
+  std::map<std::string, moon> moons;
 };
 
 #endif
