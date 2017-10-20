@@ -148,23 +148,23 @@ void ApplicationSolar::uploadUniforms() {
 // handle key input
 void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) {
   //shifts camera position to front, negative z
-  if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, -1.0f});
+  if (key == GLFW_KEY_W && (action == GLFW_PRESS || GLFW_REPEAT)) {
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, -0.1f});
     updateView();
   }
   //shifts camera position backwards, positive z
-  else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, 1.0f});
+  else if (key == GLFW_KEY_S && (action == GLFW_PRESS || GLFW_REPEAT)) {
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, 0.1f});
     updateView();
   }
   //shifts camera position left, negative x
-   else if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{-1.0f, 0.0f, 0.0f});
+   else if (key == GLFW_KEY_A && (action == GLFW_PRESS || GLFW_REPEAT)) {
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{-0.1f, 0.0f, 0.0f});
     updateView();
   }
   //shifts camera position right, positive x
-   else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{1.0f, 0.0f, 0.0f});
+   else if (key == GLFW_KEY_D && (action == GLFW_PRESS || GLFW_REPEAT)) {
+    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.1f, 0.0f, 0.0f});
     updateView();
   }
 }
