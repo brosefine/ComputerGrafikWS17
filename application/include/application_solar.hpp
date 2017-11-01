@@ -5,6 +5,7 @@
 #include "model.hpp"
 #include "structs.hpp"
 #include <map>
+#include <vector>
 
 // gpu representation of model
 class ApplicationSolar : public Application {
@@ -32,6 +33,9 @@ class ApplicationSolar : public Application {
   // draw all objects
   void render() const;
 
+  //add x stars with random data
+  void addStars(unsigned int x);
+
  protected:
   void initializeShaderPrograms();
   void initializeGeometry();
@@ -39,9 +43,12 @@ class ApplicationSolar : public Application {
 
   // cpu representation of model
   model_object planet_object;
-  // planet and moon representations
+  model_object star_object;
+  // planet, moon and star representations
   std::map<std::string, planet> planets;
   std::map<std::string, moon> moons;
+  std::vector<float> stars;
+
 };
 
 #endif

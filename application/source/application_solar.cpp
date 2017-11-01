@@ -18,6 +18,8 @@ using namespace gl;
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
+#include <cstdlib>
+#include <vector>
 
 ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  :Application{resource_path}
@@ -25,6 +27,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,planets{}
  ,moons{}
 {
+  addStars(5);
   initializeGeometry();
   initializeShaderPrograms();
   //add planets and moon
@@ -39,6 +42,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.11f, 17.0f}));
 
   moons.insert(std::pair<std::string, moon>("moonmoon", {0.04f, 6.0f, 1.0f, "earth"}));
+
 }
 
 void ApplicationSolar::render() const {
@@ -195,6 +199,9 @@ void ApplicationSolar::initializeShaderPrograms() {
 void ApplicationSolar::initializeGeometry() {
   model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL);
 
+  model star_model = model{stars, model::NORMAL, {}};
+  std::cout << star_model.vertex_num << std::endl;
+
   // generate vertex array object
   glGenVertexArrays(1, &planet_object.vertex_AO);
   // bind the array for attaching buffers
@@ -227,6 +234,20 @@ void ApplicationSolar::initializeGeometry() {
   planet_object.draw_mode = GL_TRIANGLES;
   // transfer number of indices to model object 
   planet_object.num_elements = GLsizei(planet_model.indices.size());
+
+}
+
+void ApplicationSolar::addStars(unsigned int x){
+  
+  for(int i = 0; i < 6*x; ++i){
+    stars.push_back(static_cast <float>(rand()%100));
+  }
+  /*std::cout << "currently there are " << int(stars.size()) << " stars.\n";
+
+  for(int i = 0; i < stars.size(); ++i){
+    std::cout << stars[i] << std::endl;
+  } */
+
 }
 
 ApplicationSolar::~ApplicationSolar() {
