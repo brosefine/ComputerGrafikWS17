@@ -88,10 +88,10 @@ void ApplicationSolar::render() const {
   for(auto& i : moons){
     //render planet
     //irgendwas ist hier falsch
-    upload_orbit_moon_transforms(i.second);
+    /*upload_orbit_moon_transforms(i.second);
 
     glBindVertexArray(orbit_object.vertex_AO);
-    glDrawArrays(orbit_object.draw_mode, NULL, orbit_object.num_elements);
+    glDrawArrays(orbit_object.draw_mode, NULL, orbit_object.num_elements); */
 
     upload_moon_transforms(i.second);
 
@@ -181,7 +181,7 @@ void ApplicationSolar::upload_orbit_transforms(planet const& planet) const{
 }
 
 //Hier geht der Spaß los, irgendwas ist schief gelaufen
-void ApplicationSolar::upload_orbit_moon_transforms(moon const& moon, planet const& planet) const{
+/*void ApplicationSolar::upload_orbit_moon_transforms(moon const& moon, planet const& planet) const{
   float s = moon.size_;
   float r = moon.rotation_speed_;
   float d = moon.distance_;
@@ -198,7 +198,7 @@ void ApplicationSolar::upload_orbit_moon_transforms(moon const& moon, planet con
                      1, GL_FALSE, glm::value_ptr(model_matrix));
 
 
-}
+}*/
 
 void ApplicationSolar::updateProjection() {
   // upload matrix to gpu

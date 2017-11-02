@@ -32,7 +32,7 @@ class ApplicationSolar : public Application {
 
   void upload_orbit_transforms(planet const& planet) const;
 
-  void upload_orbit_moon_transforms(moon const& moon, planet const& planet) const;
+  //void upload_orbit_moon_transforms(moon const& moon, planet const& planet) const;
 
   // draw all objects
   void render() const;
