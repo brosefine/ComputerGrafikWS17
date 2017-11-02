@@ -27,8 +27,10 @@ class ApplicationSolar : public Application {
   //calculate and upload model-/normal-matrix for given planet
   void upload_planet_transforms(planet const& planet) const;
 
-    //calculate and upload model-/normal-matrix for given moon
+  //calculate and upload model-/normal-matrix for given moon
   void upload_moon_transforms(moon const& moon) const;
+
+  void upload_orbit_transforms(planet const& planet) const;
 
   // draw all objects
   void render() const;
@@ -36,6 +38,7 @@ class ApplicationSolar : public Application {
   //add x stars with random data
   void addStars(unsigned int x);
   void glUniform(std::string mat_name, glm::fmat4 mat);
+  void initializeOrbit();
 
  protected:
   void initializeShaderPrograms();
@@ -45,10 +48,12 @@ class ApplicationSolar : public Application {
   // cpu representation of model
   model_object planet_object;
   model_object star_object;
+  model_object orbit_object;
   // planet, moon and star representations
   std::map<std::string, planet> planets;
   std::map<std::string, moon> moons;
   std::vector<float> stars;
+  std::vector<float> orbit;
 
 };
 
