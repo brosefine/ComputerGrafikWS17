@@ -35,6 +35,7 @@ class ApplicationSolar : public Application {
 
   //add x stars with random data
   void addStars(unsigned int x);
+  void glUniform(std::string mat_name, glm::fmat4 mat);
 
  protected:
   void initializeShaderPrograms();
