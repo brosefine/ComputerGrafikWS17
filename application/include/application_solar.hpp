@@ -31,6 +31,7 @@ class ApplicationSolar : public Application {
   void upload_moon_transforms(moon const& moon) const;
 
   void upload_orbit_transforms(planet const& planet) const;
+  void upload_orbit_transforms(moon const& moon) const;
 
   //void upload_orbit_moon_transforms(moon const& moon, planet const& planet) const;
 
