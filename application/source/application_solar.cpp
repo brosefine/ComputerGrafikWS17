@@ -80,7 +80,6 @@ void ApplicationSolar::render() const {
 
   for(auto& i : moons){
     //render planet
-    //irgendwas ist hier falsch
     upload_orbit_transforms(i.second);
 
     glBindVertexArray(orbit_object.vertex_AO);
