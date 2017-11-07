@@ -32,7 +32,9 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,stars{}
  ,orbit{}
 {
+  //add stars
   addStars(500);
+  //add orbits
   initializeOrbit();
 
   initializeGeometry();
@@ -60,15 +62,6 @@ void ApplicationSolar::render() const {
 
   glUseProgram(m_shaders.at("stars").handle);
   glDrawArrays(star_object.draw_mode, NULL, star_object.num_elements);  
-
-  //glBindVertexArray(orbit_object.vertex_AO);
-
-  //glUseProgram(m_shaders.at("orbit").handle);
-  //glDrawArrays(orbit_object.draw_mode, NULL, orbit_object.num_elements);
-
-
-  glBindVertexArray(planet_object.vertex_AO);
-  glUseProgram(m_shaders.at("planet").handle);
 
   for(auto& i : planets){
     //render planet
@@ -171,7 +164,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
 void ApplicationSolar::upload_orbit_transforms(planet const& planet) const{
   float d = planet.distance_;
 
-  //transform model matrix accoding to planet attributes
+  //transform model matrix according to planet attributes
   glm::fmat4 model_matrix = glm::scale(glm::fmat4{}, glm::fvec3{d, d, d});
 
   glUseProgram(m_shaders.at("orbit").handle);
@@ -180,7 +173,6 @@ void ApplicationSolar::upload_orbit_transforms(planet const& planet) const{
 
 }
 
-//Hier geht der Spaß los, irgendwas ist schief gelaufen
 void ApplicationSolar::upload_orbit_transforms(moon const& moon) const{
   //get moons planet
   auto iter = planets.find(moon.planet_);
@@ -197,6 +189,7 @@ void ApplicationSolar::upload_orbit_transforms(moon const& moon) const{
   float p_r = planet.rotation_speed_;
   float p_d = planet.distance_;
 
+  //transform model matrix according to moon attributes
   glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(p_r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*p_d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{d, d, d});
@@ -221,15 +214,19 @@ void ApplicationSolar::uploadUniforms() {
   updateProjection();
 }
 
+
 void ApplicationSolar::glUniform(std::string mat_name, glm::fmat4 mat){
+  //bind shader, update matrix
   glUseProgram(m_shaders.at("planet").handle);
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at(mat_name),
                      1, GL_FALSE, glm::value_ptr(mat));
 
+  //bind shader, update matrix
   glUseProgram(m_shaders.at("stars").handle);
   glUniformMatrix4fv(m_shaders.at("stars").u_locs.at(mat_name),
                      1, GL_FALSE, glm::value_ptr(mat));
 
+  //bind shader, update matrix
   glUseProgram(m_shaders.at("orbit").handle);
   glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at(mat_name),
                      1, GL_FALSE, glm::value_ptr(mat));
@@ -362,16 +359,6 @@ void ApplicationSolar::initializeGeometry() {
   // second attribute is 3 floats with no offset & stride
   glVertexAttribPointer(1, model::NORMAL.components, model::NORMAL.type, GL_FALSE, star_model.vertex_bytes, star_model.offsets[model::NORMAL]);
 
-  
-  // generate generic buffer
-  glGenBuffers(1, &star_object.element_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, star_object.element_BO);
-  // configure currently bound array buffer
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, model::INDEX.size * star_model.indices.size(), star_model.indices.data(), GL_STATIC_DRAW);
-  
-   
-
   // store type of primitive to draw
   star_object.draw_mode = GL_POINTS;
   // transfer number of indices to model object 
@@ -394,16 +381,6 @@ void ApplicationSolar::initializeGeometry() {
   // first attribute is 3 floats with no offset & stride
   glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, orbit_model.vertex_bytes, orbit_model.offsets[model::POSITION]);
 
-  
-  // generate generic buffer
-  glGenBuffers(1, &orbit_object.element_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, orbit_object.element_BO);
-  // configure currently bound array buffer
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, model::INDEX.size * orbit_model.indices.size(), orbit_model.indices.data(), GL_STATIC_DRAW);
-
-   
-
   // store type of primitive to draw
   orbit_object.draw_mode = GL_LINE_LOOP;
   // transfer number of indices to model object 
@@ -422,20 +399,18 @@ void ApplicationSolar::addStars(unsigned int x){
 
 }
 
+//initialize orbit and fill vector so that it is a circle
 void ApplicationSolar::initializeOrbit(){
   for(int i = 0; i < 359; ++i){
     orbit.push_back(cos((i*M_PI)/180));
     orbit.push_back(0.0f);
     orbit.push_back(-sin((i*M_PI)/180));
   }
-
+//pushback the first coordinates so that the circle closes
   orbit.push_back(1.0f);
   orbit.push_back(0.0f);
   orbit.push_back(-0.0f);
 
-  for(auto i : orbit){
-    std::cout << i << std::endl;
-  }
 }
 
 ApplicationSolar::~ApplicationSolar() {
