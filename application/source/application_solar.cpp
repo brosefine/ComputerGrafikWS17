@@ -100,7 +100,6 @@ void ApplicationSolar::render() const {
 
 void ApplicationSolar::updateView() {
   // vertices are transformed in camera space, so camera transform must be inverted
-  //m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, 10.0f});
   glm::fmat4 view_matrix = glm::inverse(m_view_transform);
   // upload matrix to gpu
   glUniform("ViewMatrix", view_matrix);
