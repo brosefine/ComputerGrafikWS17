@@ -48,7 +48,7 @@ struct shader_program {
 
 // planet struct with values size, rotation speed, distance & name
 struct planet {
-  planet(float const& size, float const& rotation_speed, float const& distance, glm::fvec4 const& color)
+  planet(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color)
    :size_{size}
    ,rotation_speed_{rotation_speed}
    ,distance_{distance}
@@ -60,11 +60,11 @@ struct planet {
   //distance from center (sun)
   float distance_;
   //color
-  glm::fvec4 color_;
+  glm::fvec3 color_;
 };
 
   struct moon {
-  moon(float const& size, float const& rotation_speed, float const& distance, std::string const& planet, glm::fvec4 const& color)
+  moon(float const& size, float const& rotation_speed, float const& distance, std::string const& planet, glm::fvec3 const& color)
    :size_{size}
    ,rotation_speed_{rotation_speed}
    ,distance_{distance}
@@ -79,6 +79,6 @@ struct planet {
   //planet the moon belongs to
   std::string planet_;
   //color
-  glm::fvec4 color_;
+  glm::fvec3 color_;
 };
 #endif
