@@ -22,6 +22,8 @@ using namespace gl;
 #include <vector>
 #include <math.h>
 
+const glm::fvec4 grey{0.5f, 0.5f, 0.5f, 0.0f};
+
 ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  :Application{resource_path}
  ,planet_object{}
@@ -40,17 +42,17 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   initializeGeometry();
   initializeShaderPrograms();
   //add planets and moon
-  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f}));
-  planets.insert(std::pair<std::string, planet>("merkur", {0.25f, 1.0f, 3.0f}));
-  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.74f, 5.0f}));
-  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.63f, 7.0f}));
-  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.51f, 9.0f}));
-  planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.27f, 11.0f}));
-  planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.20f, 13.0f}));
-  planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.14f, 15.0f}));
-  planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.11f, 17.0f}));
+  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("merkur", {0.25f, 1.0f, 3.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.74f, 5.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.63f, 7.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.51f, 9.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.27f, 11.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.20f, 13.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.14f, 15.0f, grey}));
+  planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.11f, 17.0f, grey}));
 
-  moons.insert(std::pair<std::string, moon>("moonmoon", {0.04f, 6.0f, 1.0f, "earth"}));
+  moons.insert(std::pair<std::string, moon>("moonmoon", {0.04f, 6.0f, 1.0f, "earth", grey}));
   
 }
 
@@ -143,6 +145,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   float s = planet.size_;
   float r = planet.rotation_speed_;
   float d = planet.distance_;
+  glm::fvec4 color = planet.color_;
 
   //transform model matrix accoding to planet attributes
   glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
@@ -157,6 +160,9 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+  glUniform4fv(m_shaders.at("planet").u_locs.at("planetColor"),
+                     1, glm::value_ptr(color));
 }
 
 void ApplicationSolar::upload_orbit_transforms(planet const& planet) const{
@@ -274,6 +280,10 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
+
+  m_shaders.at("planet").u_locs["planetColor"] = -1;
+  m_shaders.at("planet").u_locs["sunPosition"] = -1;
+  m_shaders.at("planet").u_locs["lightColor"] = -1;
 
   m_shaders.emplace("stars", shader_program{m_resource_path + "shaders/simple_stars.vert",
                                            m_resource_path + "shaders/simple_stars.frag"});

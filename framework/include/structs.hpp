@@ -3,6 +3,7 @@
 
 #include <map>
 #include <glbinding/gl/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 // use gl definitions from glbinding 
 using namespace gl;
 
