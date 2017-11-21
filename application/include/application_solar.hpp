@@ -50,6 +50,7 @@ class ApplicationSolar : public Application {
   //initialze orbit 
   void initializeOrbit();
 
+
   glm::vec3 ExtractCameraPos() const;
 
  protected:
@@ -66,6 +67,8 @@ class ApplicationSolar : public Application {
   std::map<std::string, moon> moons;
   std::vector<float> stars;
   std::vector<float> orbit;
+
+  std::string shaderName = "planet_comic";
 
 };
 

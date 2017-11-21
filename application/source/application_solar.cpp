@@ -33,8 +33,6 @@ const glm::fvec3 uranus         {0.38431f, 0.68235f, 0.90588f};
 const glm::fvec3 neptune        {0.23922f, 0.36863f, 0.97647f};
 const glm::fvec3 grey           {0.5f, 0.5f, 0.5f};
 
-std::string shaderName = "planet";
-
 ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  :Application{resource_path}
  ,planet_object{}
@@ -245,7 +243,7 @@ void ApplicationSolar::upload_color(glm::fvec3 const& color) const {
                      1, glm::value_ptr(color));
   glUniform3fv(m_shaders.at(shaderName).u_locs.at("matSpecular"),
                      1, glm::value_ptr(glm::fvec3(1.0f, 1.0f, 1.0f)));
-  glUniform1f(m_shaders.at(shaderName).u_locs.at("matShininess"), 0.0f);
+  glUniform1f(m_shaders.at(shaderName).u_locs.at("matShininess"), 50.0f);
 
 }
 
@@ -303,6 +301,14 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
     m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.1f, 0.0f, 0.0f});
     updateView();
   }
+  //change shader
+    else if (key == GLFW_KEY_1 && (action == GLFW_PRESS)) {
+      shaderName = "planet";
+  }
+  //change shader
+    else if (key == GLFW_KEY_2 && (action == GLFW_PRESS)) {
+      shaderName = "rainbow";
+  }
 }
 
 //handle delta mouse movement input
@@ -343,8 +349,8 @@ void ApplicationSolar::initializeShaderPrograms() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  m_shaders.emplace("planet_comic", shader_program{m_resource_path + "shaders/blinn_phong_planet.vert",
-                                           m_resource_path + "shaders/blinn_phong_planet.frag"});
+  m_shaders.emplace("planet_comic", shader_program{m_resource_path + "shaders/cel_shading_planet.vert",
+                                           m_resource_path + "shaders/cel_shading_planet.frag"});
 
   m_shaders.at("planet_comic").u_locs["NormalMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ModelMatrix"] = -1;
