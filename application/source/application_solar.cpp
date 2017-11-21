@@ -81,7 +81,11 @@ void ApplicationSolar::render() const {
     glBindVertexArray(orbit_object.vertex_AO);
     glDrawArrays(orbit_object.draw_mode, NULL, orbit_object.num_elements);
 
-    upload_planet_transforms(i.second);
+    if(i.first == "sun"){
+      upload_sun_transforms(i.second);
+    } else {    
+      upload_planet_transforms(i.second);
+    }
     // bind the VAO to draw
     glBindVertexArray(planet_object.vertex_AO);
 
@@ -188,6 +192,30 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   }
 }
 
+void ApplicationSolar::upload_sun_transforms(planet const& sun) const{
+  //render and upload planets
+  float s = sun.size_;
+  float r = sun.rotation_speed_;
+  float d = sun.distance_;
+  glm::fvec3 color = sun.color_;
+
+  //transform model matrix accoding to planet attributes
+  glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
+  model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
+  model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
+
+  glUseProgram(m_shaders.at("rainbow").handle);
+  glUniformMatrix4fv(m_shaders.at("rainbow").u_locs.at("ModelMatrix"),
+                     1, GL_FALSE, glm::value_ptr(model_matrix));
+
+  // extra matrix for normal transformation to keep them orthogonal to surface
+  glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
+  glUniformMatrix4fv(m_shaders.at("rainbow").u_locs.at("NormalMatrix"),
+                     1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+  
+}
+
 void ApplicationSolar::upload_orbit_transforms(planet const& planet) const{
   float d = planet.distance_;
 
@@ -274,6 +302,21 @@ void ApplicationSolar::glUniform(std::string mat_name, glm::fmat4 mat){
                      1, GL_FALSE, glm::value_ptr(mat));
 
   //bind shader, update matrix
+  glUseProgram(m_shaders.at("rainbow").handle);
+  glUniformMatrix4fv(m_shaders.at("rainbow").u_locs.at(mat_name),
+                     1, GL_FALSE, glm::value_ptr(mat));
+
+  //bind shader, update matrix
+  glUseProgram(m_shaders.at("planet").handle);
+  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at(mat_name),
+                     1, GL_FALSE, glm::value_ptr(mat));
+
+  //bind shader, update matrix
+  glUseProgram(m_shaders.at("planet_comic").handle);
+  glUniformMatrix4fv(m_shaders.at("planet_comic").u_locs.at(mat_name),
+                     1, GL_FALSE, glm::value_ptr(mat));
+
+  //bind shader, update matrix
   glUseProgram(m_shaders.at("orbit").handle);
   glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at(mat_name),
                      1, GL_FALSE, glm::value_ptr(mat));
@@ -307,6 +350,9 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
   }
   //change shader
     else if (key == GLFW_KEY_2 && (action == GLFW_PRESS)) {
+      shaderName = "planet_comic";
+  }
+    else if (key == GLFW_KEY_3 && (action == GLFW_PRESS)) {
       shaderName = "rainbow";
   }
 }

@@ -20,9 +20,9 @@ out vec3 pass_LightDir;
 out vec3 pass_CameraDir;
 
 out vec3 pass_matAmbient;
-out vec3 pass_matDiffuse;
-out vec3 pass_matSpecular;
-out float pass_matShininess;
+//out vec3 pass_matDiffuse;
+//out vec3 pass_matSpecular;
+//out float pass_matShininess;
 
 void main(void)
 {
@@ -34,9 +34,9 @@ void main(void)
 	pass_CameraDir = normalize(-1*(worldPosition.xyz));
 
 	pass_matAmbient = matAmbient;
-	pass_matDiffuse = matDiffuse;
-	pass_matSpecular = matSpecular;
-	pass_matShininess = matShininess;
+	//pass_matDiffuse = matDiffuse;
+	//pass_matSpecular = matSpecular;
+	//pass_matShininess = matShininess;
 
 	gl_Position = ProjectionMatrix * worldPosition;
 }

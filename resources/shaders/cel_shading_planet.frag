@@ -9,42 +9,31 @@ in vec3 pass_LightDir;
 in vec3 pass_CameraDir;
 
 in vec3 pass_matAmbient;
-in vec3 pass_matDiffuse;
-in vec3 pass_matSpecular;
-in float pass_matShininess;
+//in vec3 pass_matDiffuse;
+//in vec3 pass_matSpecular;
+//in float pass_matShininess;
 
 out vec4 out_Color;
 
-vec3 ambientLighting(){
+float diffuseLighting(in vec3 N, in vec3 L){
 
-	return pass_matAmbient * ambient;
-}
-
-vec3 diffuseLighting(in vec3 N, in vec3 L){
-
-	float diffuseTerm = clamp(dot(N,L),0,1);
-	return pass_matDiffuse * diffuse * diffuseTerm;
+	return clamp(dot(L,N),0.0,1.0);
 
 }
 
-vec3 specularLighting(in vec3 N, in vec3 L, in vec3 V){
+float specularLighting(in vec3 N, in vec3 L, in vec3 V){
 	
-	float specularTerm = 0;
-
-	if(dot(N, L) > 0){
+	if(dot(N,L)>0){
 		vec3 H = normalize(L+V);
-		specularTerm = pow(dot(N,H), pass_matShininess);
-	}
-
-	return pass_matSpecular * specular * specularTerm;
+      return pow(clamp(dot(H,N),0.0,1.0),64.0);
+   	}
+   return 0.0;
 }
 
 void main() {
 
 	float outline = 0.35;
-	float shadow =	0.5;
-	float medium =  0.6;
-	float light = 0.7;
+	float shades = 3;
 	
 	vec3 L = normalize(pass_LightDir);
 	vec3 V = normalize(pass_CameraDir);
@@ -54,22 +43,17 @@ void main() {
 
 	if(dotView < outline){
 		out_Color = vec4(pass_matAmbient, 1.0);
-	} else if (dotView < shadow) {
-		out_Color = vec4(1.0, 0.0, 0.0, 1.0);
-	} else if (dotView < medium) {
-		out_Color = vec4(0.0, 1.0, 0.0, 1.0);
 	} else {
-		out_Color = vec4(0.0, 0.0, 1.0, 1.0);
-	}
+	
+		float amb = 0.1;
+		float dif = diffuseLighting(N, L);
+		float spe = specularLighting(N, L, V);
 
-	//{
-	//
-	//	vec3 amb = ambientLighting();
-	//	vec3 dif = diffuseLighting(N, L);
-	//	vec3 spe = specularLighting(N, L, V);
-	//
-	//
-	//	out_Color = vec4((amb + dif + spe), 1.0);
-	//}
+		float intensity = amb + dif + spe;
+		float shadeIntensity = ceil(intensity * shades)/shades;
+	
+	
+		out_Color = vec4((pass_matAmbient * shadeIntensity), 1.0);
+	}
 
 }
