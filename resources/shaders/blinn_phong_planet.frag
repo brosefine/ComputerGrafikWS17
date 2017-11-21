@@ -1,5 +1,6 @@
 #version 150
 
+//light values
 vec3 diffuse = vec3(0.5,0.5,0.5);
 vec3 specular = vec3(0.5,0.5,0.5);
 vec3 ambient = vec3(0.5,0.5,0.5);
@@ -8,6 +9,7 @@ in vec3 pass_Normal;
 in vec3 pass_LightDir;
 in vec3 pass_CameraDir;
 
+//material color values
 in vec3 pass_matAmbient;
 in vec3 pass_matDiffuse;
 in vec3 pass_matSpecular;
@@ -15,11 +17,13 @@ in float pass_matShininess;
 
 out vec4 out_Color;
 
+//calculate ambient color part (rgb)
 vec3 ambientLighting(){
 
 	return pass_matAmbient * ambient;
 }
 
+//calculate diffuse color part (rgb)
 vec3 diffuseLighting(in vec3 N, in vec3 L){
 
 	float diffuseTerm = clamp(dot(N,L),0,1);
@@ -27,6 +31,7 @@ vec3 diffuseLighting(in vec3 N, in vec3 L){
 
 }
 
+//calculate specular color part (rgb)
 vec3 specularLighting(in vec3 N, in vec3 L, in vec3 V){
 	
 	float specularTerm = 0;
@@ -49,6 +54,6 @@ void main() {
 	vec3 dif = diffuseLighting(N, L);
 	vec3 spe = specularLighting(N, L, V);
 
-
+	//output color combines all parts (ambient, diffuse, specular)
 	out_Color = vec4((amb + dif + spe), 1.0);
 }

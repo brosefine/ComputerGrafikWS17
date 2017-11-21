@@ -35,9 +35,6 @@ class ApplicationSolar : public Application {
   void upload_orbit_transforms(planet const& planet) const;
   void upload_orbit_transforms(moon const& moon) const;
 
-  //camera Position to shader
-  void upload_camera_position() const;
-
   //color to shader
   void upload_color(glm::fvec3 const& color) const;
 
@@ -51,8 +48,6 @@ class ApplicationSolar : public Application {
   //initialze orbit 
   void initializeOrbit();
 
-
-  glm::vec3 ExtractCameraPos() const;
 
  protected:
   void initializeShaderPrograms();
@@ -69,6 +64,7 @@ class ApplicationSolar : public Application {
   std::vector<float> stars;
   std::vector<float> orbit;
 
+  //used shader
   std::string shaderName = "planet_comic";
 
 };

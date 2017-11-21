@@ -22,7 +22,7 @@ using namespace gl;
 #include <vector>
 #include <math.h>
 
-const glm::fvec3 sun            {1.0f, 0.98039f, 0.95686f};
+const glm::fvec3 sun            {1.0f, 0.98039f, 0.75f};
 const glm::fvec3 merkur         {0.69412f, 0.67843f, 0.67843f};
 const glm::fvec3 venus          {0.89020f, 0.73333f, 0.46275};
 const glm::fvec3 earth          {0.41961f, 0.57647f, 0.83922f};
@@ -44,7 +44,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,orbit{}
 {
   //add stars
-  addStars(500);
+  addStars(1500);
   //add orbits
   initializeOrbit();
 
@@ -113,18 +113,6 @@ void ApplicationSolar::render() const {
 
 }
 
-glm::vec3 ApplicationSolar::ExtractCameraPos() const
-{
-  glm::mat4 a_modelView = inverse(m_view_transform);
-
-  glm::mat3 rotMat(a_modelView);
-  glm::vec3 d(a_modelView[3]);
- 
-  glm::vec3 retVec = -d * rotMat;
-  std::cout << "x: " << retVec.x << "y: " << retVec.y << "z: " << retVec.z << std::endl;
-  return retVec;
-}
-
 void ApplicationSolar::updateView() {
   // vertices are transformed in camera space, so camera transform must be inverted
   glm::fmat4 view_matrix = glm::inverse(m_view_transform);
@@ -155,6 +143,7 @@ void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
 
+  //upload matrices to current shader
   glUseProgram(m_shaders.at(shaderName).handle);
   glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
                      1, GL_FALSE, glm::value_ptr(model_matrix));
@@ -177,6 +166,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
 
+  //upload matrices to current shader
   glUseProgram(m_shaders.at(shaderName).handle);
   glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
                      1, GL_FALSE, glm::value_ptr(model_matrix));
@@ -186,6 +176,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
 
+//do not upload colors when using rainbow-shader
   if(shaderName != "rainbow"){
     //upload_camera_position();
     upload_color(color);
@@ -256,22 +247,22 @@ void ApplicationSolar::upload_orbit_transforms(moon const& moon) const{
 
 }
 
-void ApplicationSolar::upload_camera_position() const{
-  
-  glUseProgram(m_shaders.at(shaderName).handle);
-  glUniform3fv(m_shaders.at(shaderName).u_locs.at("cameraPosition"),
-                     1, glm::value_ptr(ExtractCameraPos()));
-}
-
+//upload planet colors to blinn-phong and cel shader
 void ApplicationSolar::upload_color(glm::fvec3 const& color) const {
-  glUseProgram(m_shaders.at(shaderName).handle);
-  glUniform3fv(m_shaders.at(shaderName).u_locs.at("matAmbient"),
+  glUseProgram(m_shaders.at("planet").handle);
+  glUniform3fv(m_shaders.at("planet").u_locs.at("matAmbient"),
                      1, glm::value_ptr(color));
-  glUniform3fv(m_shaders.at(shaderName).u_locs.at("matDiffuse"),
+  glUniform3fv(m_shaders.at("planet").u_locs.at("matDiffuse"),
                      1, glm::value_ptr(color));
-  glUniform3fv(m_shaders.at(shaderName).u_locs.at("matSpecular"),
+  glUniform3fv(m_shaders.at("planet").u_locs.at("matSpecular"),
                      1, glm::value_ptr(glm::fvec3(1.0f, 1.0f, 1.0f)));
-  glUniform1f(m_shaders.at(shaderName).u_locs.at("matShininess"), 50.0f);
+  glUniform1f(m_shaders.at("planet").u_locs.at("matShininess"), 50.0f);
+
+  glUseProgram(m_shaders.at("planet_comic").handle);
+  glUniform3fv(m_shaders.at("planet_comic").u_locs.at("matColor"),
+                     1, glm::value_ptr(color));
+  //bind current shader
+  glUseProgram(m_shaders.at(shaderName).handle);
 
 }
 
@@ -291,10 +282,7 @@ void ApplicationSolar::uploadUniforms() {
 
 
 void ApplicationSolar::glUniform(std::string mat_name, glm::fmat4 mat){
-  //bind shader, update matrix
-  glUseProgram(m_shaders.at(shaderName).handle);
-  glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at(mat_name),
-                     1, GL_FALSE, glm::value_ptr(mat));
+  
 
   //bind shader, update matrix
   glUseProgram(m_shaders.at("stars").handle);
@@ -357,6 +345,7 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
     else if (key == GLFW_KEY_2 && (action == GLFW_PRESS)) {
       shaderName = "planet_comic";
   }
+  //change shader
     else if (key == GLFW_KEY_3 && (action == GLFW_PRESS)) {
       shaderName = "rainbow";
   }
@@ -420,10 +409,8 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_comic").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ProjectionMatrix"] = -1;
-  m_shaders.at("planet_comic").u_locs["matAmbient"] = -1;
-  m_shaders.at("planet_comic").u_locs["matDiffuse"] = -1;
-  m_shaders.at("planet_comic").u_locs["matSpecular"] = -1;
-  m_shaders.at("planet_comic").u_locs["matShininess"] = -1;
+  m_shaders.at("planet_comic").u_locs["matColor"] = -1;
+
   //m_shaders.at("planet_comic").u_locs["cameraPosition"] = -1;
 
 
