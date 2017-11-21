@@ -204,13 +204,13 @@ void ApplicationSolar::upload_sun_transforms(planet const& sun) const{
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
 
-  glUseProgram(m_shaders.at("rainbow").handle);
-  glUniformMatrix4fv(m_shaders.at("rainbow").u_locs.at("ModelMatrix"),
+  glUseProgram(m_shaders.at("sun").handle);
+  glUniformMatrix4fv(m_shaders.at("sun").u_locs.at("ModelMatrix"),
                      1, GL_FALSE, glm::value_ptr(model_matrix));
 
   // extra matrix for normal transformation to keep them orthogonal to surface
   glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
-  glUniformMatrix4fv(m_shaders.at("rainbow").u_locs.at("NormalMatrix"),
+  glUniformMatrix4fv(m_shaders.at("sun").u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
 
   
@@ -320,6 +320,11 @@ void ApplicationSolar::glUniform(std::string mat_name, glm::fmat4 mat){
   glUseProgram(m_shaders.at("orbit").handle);
   glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at(mat_name),
                      1, GL_FALSE, glm::value_ptr(mat));
+
+  //bind shader, update matrix
+  glUseProgram(m_shaders.at("sun").handle);
+  glUniformMatrix4fv(m_shaders.at("sun").u_locs.at(mat_name),
+                     1, GL_FALSE, glm::value_ptr(mat));
 }
 
 // handle key input
@@ -379,6 +384,19 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("rainbow").u_locs["ProjectionMatrix"] = -1;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// store shader program objects in container
+  m_shaders.emplace("sun", shader_program{m_resource_path + "shaders/simple_sun.vert",
+                                           m_resource_path + "shaders/simple_sun.frag"});
+  // request uniform locations for shader program
+  m_shaders.at("sun").u_locs["NormalMatrix"] = -1;
+  m_shaders.at("sun").u_locs["ModelMatrix"] = -1;
+  m_shaders.at("sun").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("sun").u_locs["ProjectionMatrix"] = -1;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
   m_shaders.emplace("planet", shader_program{m_resource_path + "shaders/blinn_phong_planet.vert",
                                            m_resource_path + "shaders/blinn_phong_planet.frag"});
