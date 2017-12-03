@@ -3,6 +3,7 @@
 
 #include "application.hpp"
 #include "model.hpp"
+#include "pixel_data.hpp"
 #include "structs.hpp"
 #include <map>
 #include <vector>
@@ -37,6 +38,8 @@ class ApplicationSolar : public Application {
 
   //color to shader
   void upload_color(glm::fvec3 const& color) const;
+  //tex to shader
+  void upload_texture(planet const& planet) const;
 
   // draw all objects
   void render() const;
@@ -47,6 +50,8 @@ class ApplicationSolar : public Application {
   void glUniform(std::string mat_name, glm::fmat4 mat);
   //initialze orbit 
   void initializeOrbit();
+  //initialize textures
+  void initializeTextures();
 
 
  protected:
@@ -58,11 +63,13 @@ class ApplicationSolar : public Application {
   model_object planet_object;
   model_object star_object;
   model_object orbit_object;
+  texture_object m_texture_object;
   // planet, moon, star and orbit representations
   std::map<std::string, planet> planets;
   std::map<std::string, moon> moons;
   std::vector<float> stars;
   std::vector<float> orbit;
+  std::vector<pixel_data> textures;
 
   //used shader
   std::string shaderName = "planet_comic";

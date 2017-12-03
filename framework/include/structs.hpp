@@ -48,11 +48,14 @@ struct shader_program {
 
 // planet struct with values size, rotation speed, distance & name
 struct planet {
-  planet(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color)
+  planet(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color, int tex)
    :size_{size}
    ,rotation_speed_{rotation_speed}
    ,distance_{distance}
-   ,color_{color}{}
+   ,color_{color}
+   ,tex_{tex}
+   ,tex_obj_{}
+   {}
 
   float size_;
   //rotation per time unit around sun
@@ -61,6 +64,10 @@ struct planet {
   float distance_;
   //color
   glm::fvec3 color_;
+  //texture
+  int tex_;
+  //texture object
+  texture_object tex_obj_;
 };
 
   struct moon {

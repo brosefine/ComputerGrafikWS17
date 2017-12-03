@@ -4,6 +4,10 @@
 vec3 diffuse = vec3(0.5,0.5,0.5);
 vec3 specular = vec3(0.5,0.5,0.5);
 vec3 ambient = vec3(0.5,0.5,0.5);
+//material color values
+vec3 pass_matSpecular = vec3(1.0, 1.0, 1.0);
+float pass_matShininess = 50.0;
+
 
 in vec3 pass_Normal;
 in vec3 pass_LightDir;
@@ -12,8 +16,6 @@ in vec3 pass_CameraDir;
 //material color values
 in vec3 pass_matAmbient;
 in vec3 pass_matDiffuse;
-in vec3 pass_matSpecular;
-in float pass_matShininess;
 
 out vec4 out_Color;
 

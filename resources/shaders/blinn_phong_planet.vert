@@ -13,8 +13,6 @@ uniform mat4 NormalMatrix;
 //Color uniforms
 uniform vec3 matAmbient;
 uniform vec3 matDiffuse;
-uniform vec3 matSpecular;
-uniform float matShininess;
 
 //pass to frag-shader
 out vec3 pass_Normal;
@@ -23,8 +21,6 @@ out vec3 pass_CameraDir;
 
 out vec3 pass_matAmbient;
 out vec3 pass_matDiffuse;
-out vec3 pass_matSpecular;
-out float pass_matShininess;
 
 void main(void)
 {
@@ -40,8 +36,6 @@ void main(void)
 
 	pass_matAmbient = matAmbient;
 	pass_matDiffuse = matDiffuse;
-	pass_matSpecular = matSpecular;
-	pass_matShininess = matShininess;
 
 	gl_Position = ProjectionMatrix * worldPosition;
 }
