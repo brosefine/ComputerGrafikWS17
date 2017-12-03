@@ -70,22 +70,11 @@ struct planet {
   texture_object tex_obj_;
 };
 
-  struct moon {
-  moon(float const& size, float const& rotation_speed, float const& distance, std::string const& planet, glm::fvec3 const& color)
-   :size_{size}
-   ,rotation_speed_{rotation_speed}
-   ,distance_{distance}
-   ,planet_{planet}
-   ,color_{color}{}
+  struct moon : public planet {
+  moon(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color, int tex, std::string const& planet_name)
+   :planet{size, rotation_speed, distance, color, tex}
+   ,planet_name_{planet_name}{}
 
-  float size_;
-  //rotation per time unit around sun
-  float rotation_speed_;
-  //distance from center (sun)
-  float distance_;
-  //planet the moon belongs to
-  std::string planet_;
-  //color
-  glm::fvec3 color_;
+  std::string planet_name_;
 };
 #endif

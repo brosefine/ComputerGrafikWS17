@@ -43,6 +43,7 @@ class ApplicationSolar : public Application {
 
   // draw all objects
   void render() const;
+  void renderSky() const;
 
   //add x stars with random data
   void addStars(unsigned int x);

@@ -46,7 +46,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,textures{}
 {
   //add planets and moon
-  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f, sun, 1}));
+  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f, sun, 11}));
   planets.insert(std::pair<std::string, planet>("mercury", {0.25f, 1.0f, 3.0f, merkur, 2}));
   planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.74f, 5.0f, venus, 3}));
   planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.63f, 7.0f, earth, 4}));
@@ -55,7 +55,8 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.20f, 13.0f, saturn, 7}));
   planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.14f, 15.0f, uranus, 8}));
   planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.11f, 17.0f, neptune, 9}));
-  moons.insert(std::pair<std::string, moon>("moon", {0.04f, 6.0f, 1.0f, "earth", grey}));
+
+  moons.insert(std::pair<std::string, moon>("moon", {0.04f, 6.0f, 1.0f, grey, 10, "earth"}));
 
   //add stars
   addStars(1500);
@@ -70,6 +71,8 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
 
 
 void ApplicationSolar::render() const {
+
+  renderSky();
   // bind shader to upload uniforms
 
   glBindVertexArray(star_object.vertex_AO);
@@ -116,6 +119,20 @@ void ApplicationSolar::render() const {
 
 }
 
+void ApplicationSolar::renderSky() const {
+  glDepthMask(GL_FALSE); 
+  planet sky (80.0f, 0.0f, 0.0f, {0.2f, 0.2f, 0.2f}, 1);
+  sky.tex_obj_ = m_texture_object;
+
+  upload_sun_transforms(sky);
+  // bind the VAO to draw
+  glBindVertexArray(planet_object.vertex_AO);
+
+  // draw bound vertex array using bound shader
+  glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+  glDepthMask(1); 
+}
+
 void ApplicationSolar::updateView() {
   // vertices are transformed in camera space, so camera transform must be inverted
   glm::fmat4 view_matrix = glm::inverse(m_view_transform);
@@ -125,7 +142,7 @@ void ApplicationSolar::updateView() {
 
 void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
   //get moons planet
-  auto iter = planets.find(moon.planet_);
+  auto iter = planets.find(moon.planet_name_);
   if(iter == planets.end()){
     return;
   }
@@ -135,6 +152,7 @@ void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
   float s = moon.size_;
   float r = moon.rotation_speed_;
   float d = moon.distance_;
+  glm::fvec3 color = moon.color_;
 
   float p_r = planet.rotation_speed_;
   float p_d = planet.distance_;
@@ -155,6 +173,14 @@ void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
   glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
   glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+  if (shaderName == "planet_tex"){
+      upload_texture(moon);
+   } else if(shaderName != "rainbow"){
+      //upload_camera_position();
+      upload_color(color);
+  }
+  
 }
 
 void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
@@ -231,7 +257,7 @@ void ApplicationSolar::upload_orbit_transforms(planet const& planet) const{
 
 void ApplicationSolar::upload_orbit_transforms(moon const& moon) const{
   //get moons planet
-  auto iter = planets.find(moon.planet_);
+  auto iter = planets.find(moon.planet_name_);
   if(iter == planets.end()){
     return;
   }
@@ -590,7 +616,29 @@ void ApplicationSolar::initializeOrbit(){
 }
 
 void ApplicationSolar::initializeTextures(){
+  //planet textures + sun
   for(auto& i : planets){
+    std::string p_name = i.first;
+    int tex_number = i.second.tex_;
+
+    std::string path = "textures/" + p_name + ".png";
+    std::cout << path << std::endl;
+
+    pixel_data texture = texture_loader::file(m_resource_path + path);
+    textures.push_back(texture);
+
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &i.second.tex_obj_.handle);
+    glBindTexture(GL_TEXTURE_2D, i.second.tex_obj_.handle);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
+  }
+
+  //moon textures
+  for(auto& i : moons){
     std::string p_name = i.first;
     int tex_number = i.second.tex_;
 
@@ -609,6 +657,19 @@ void ApplicationSolar::initializeTextures(){
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
   }
+
+  //skysphere texture
+  pixel_data texture = texture_loader::file(m_resource_path + "textures/sky.png");
+  textures.push_back(texture);
+
+  glActiveTexture(GL_TEXTURE1);
+  glGenTextures(1, &m_texture_object.handle);
+  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
 }
 
 ApplicationSolar::~ApplicationSolar() {
