@@ -9,12 +9,15 @@ layout(location = 2) in vec2 in_TexCoord;
 uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
-uniform sampler2D ColorTex;
+uniform mat4 NormalMatrix;
 
-out vec3 pass_Color;
+
+out vec2 pass_TexCord;
+out vec3 pass_Normal;
 
 void main(void)
 {
-	gl_Position = (ProjectionMatrix  * ViewMatrix * ModelMatrix) * vec4(in_Position, 1.0);
-	pass_Color = texture(ColorTex, in_TexCoord).xyz;
+	gl_Position = (ProjectionMatrix  *  ModelMatrix) * vec4(in_Position, 1.0);
+	pass_Normal = (NormalMatrix * vec4(in_Normal, 0.0)).xyz;
+	pass_TexCord = in_TexCoord;
 }

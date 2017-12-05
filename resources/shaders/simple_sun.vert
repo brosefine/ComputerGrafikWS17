@@ -10,14 +10,14 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 NormalMatrix;
-uniform sampler2D ColorTex;
 
-out vec3 pass_Color;
+
+out vec2 pass_TexCord;
 out vec3 pass_Normal;
 
 void main(void)
 {
 	gl_Position = (ProjectionMatrix  * ViewMatrix * ModelMatrix) * vec4(in_Position, 1.0);
 	pass_Normal = (NormalMatrix * vec4(in_Normal, 0.0)).xyz;
-	pass_Color = texture(ColorTex, in_TexCoord).xyz;
+	pass_TexCord = in_TexCoord;
 }

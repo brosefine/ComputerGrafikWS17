@@ -1,5 +1,7 @@
 #version 150
 
+uniform sampler2D ColorTex;
+
 //light values
 vec3 diffuse = vec3(0.5,0.5,0.5);
 vec3 specular = vec3(0.5,0.5,0.5);
@@ -13,9 +15,11 @@ in vec3 pass_LightDir;
 in vec3 pass_CameraDir;
 
 //texture color
-in vec3 pass_Color;
+in vec2 pass_TexCord;
 
 out vec4 out_Color;
+
+vec3 pass_Color = texture(ColorTex, pass_TexCord).xyz;
 
 //calculate ambient color part (rgb)
 vec3 ambientLighting(){

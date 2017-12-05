@@ -10,10 +10,10 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 NormalMatrix;
-uniform sampler2D ColorTex;
+
 
 //pass to frag-shader
-out vec3 pass_Color;
+out vec2 pass_TexCord;
 
 out vec3 pass_Normal;
 out vec3 pass_LightDir;
@@ -31,7 +31,7 @@ void main(void)
 	pass_LightDir = normalize(sunPosition.xyz - worldPosition.xyz);
 	pass_CameraDir = normalize(-1*(worldPosition.xyz));
 
-	pass_Color = texture(ColorTex, in_TexCoord).xyz;
+	pass_TexCord = in_TexCoord;
 
 	gl_Position = ProjectionMatrix * worldPosition;
 }
