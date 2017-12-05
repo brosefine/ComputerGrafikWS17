@@ -49,16 +49,16 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
 {
   //add planets and moon
   planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f, sun, 20, false}));
-  planets.insert(std::pair<std::string, planet>("mercury", {0.25f, 1.0f, 3.0f, merkur, 2, false}));
-  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.74f, 5.0f, venus, 4, false}));
-  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.63f, 7.0f, earth, 6, false}));
-  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.51f, 9.0f, mars, 8, false}));
+  planets.insert(std::pair<std::string, planet>("mercury", {0.25f, 0.2f, 3.0f, merkur, 2, true}));
+  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.74f, 5.0f, venus, 4, true}));
+  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.63f, 7.0f, earth, 6, true}));
+  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.51f, 9.0f, mars, 8, true}));
   planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.27f, 11.0f, jupiter, 10, false}));
   planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.20f, 13.0f, saturn, 12, false}));
   planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.14f, 15.0f, uranus, 14, false}));
   planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.11f, 17.0f, neptune, 16, false}));
 
-  moons.insert(std::pair<std::string, moon>("moon", {0.04f, 6.0f, 1.0f, grey, 18, false, "earth"}));
+  moons.insert(std::pair<std::string, moon>("moon", {0.04f, 6.0f, 1.0f, grey, 18, true, "earth"}));
 
   //add stars
   addStars(1500);
@@ -207,6 +207,17 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
 
+  if(planet.has_Normals_)
+  {//upload matrices to current shader
+    glUseProgram(m_shaders.at("planet_normal_tex").handle);
+    glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("ModelMatrix"),
+                       1, GL_FALSE, glm::value_ptr(model_matrix));
+  
+    // extra matrix for normal transformation to keep them orthogonal to surface
+    glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("NormalMatrix"),
+                       1, GL_FALSE, glm::value_ptr(normal_matrix));
+  }
+
 //do not upload colors when using rainbow-shader
   if (shaderName == "planet_tex"){
     upload_texture(planet);
@@ -331,15 +342,27 @@ void ApplicationSolar::upload_color(glm::fvec3 const& color) const {
 }
 
 void ApplicationSolar::upload_texture(planet const& planet) const{
-  glActiveTexture(GL_TEXTURE0 + planet.tex_);
-  glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
-
-  int color_sampler_location = glGetUniformLocation(m_shaders.at("planet_tex").handle, "ColorTex");
-  glUseProgram(m_shaders.at("planet_tex").handle);
-  glUniform1i(color_sampler_location, planet.tex_);
-
   if(planet.has_Normals_){
-    
+    glActiveTexture(GL_TEXTURE0 + planet.tex_);
+    glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
+
+    int color_sampler_location = glGetUniformLocation(m_shaders.at("planet_normal_tex").handle, "ColorTex");
+    glUseProgram(m_shaders.at("planet_normal_tex").handle);
+    glUniform1i(color_sampler_location, planet.tex_);
+
+    glActiveTexture(GL_TEXTURE0 + (planet.tex_ + 1));
+    glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[1].handle);
+
+    color_sampler_location = glGetUniformLocation(m_shaders.at("planet_normal_tex").handle, "NormalTex");
+    glUseProgram(m_shaders.at("planet_normal_tex").handle);
+    glUniform1i(color_sampler_location, (planet.tex_ + 1));
+  } else {
+    glActiveTexture(GL_TEXTURE0 + planet.tex_);
+    glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
+
+    int color_sampler_location = glGetUniformLocation(m_shaders.at("planet_tex").handle, "ColorTex");
+    glUseProgram(m_shaders.at("planet_tex").handle);
+    glUniform1i(color_sampler_location, planet.tex_);
   }
 }
 
@@ -703,7 +726,7 @@ void ApplicationSolar::initializeTextures(){
     i.second.tex_objs_.push_back(texture_object{});
 
 
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0 + i.second.tex_);
     glGenTextures(1, &i.second.tex_objs_[0].handle);
     glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[0].handle);
 
@@ -717,7 +740,7 @@ void ApplicationSolar::initializeTextures(){
       textures.push_back(texture);
       i.second.tex_objs_.push_back(texture_object{});
 
-      glActiveTexture(GL_TEXTURE0);
+      glActiveTexture(GL_TEXTURE0 + (i.second.tex_ + 1));
       glGenTextures(1, &i.second.tex_objs_[1].handle);
       glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[1].handle);
 

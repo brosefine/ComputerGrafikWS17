@@ -158,24 +158,28 @@ std::vector<glm::fvec3> generate_tangents(tinyobj::mesh_t const& model) {
     // calculate tangent for the triangle
     // see generate_normals() for similar workflow 
 
-    glm::fvec3 t, b, p1, p2;
-    glm::fvec2 t1, t2;
+    glm::fvec3 t, b, p0, p1, p2;
+    glm::fvec2 t0, t1, t2;
 
-    p1 = positions[indices[1]];   t1 = texcoords[indices[1]];
-    p2 = positions[indices[2]];   t2 = texcoords[indices[2]];
+    p0 = positions[indices[0]];        t0 = texcoords[indices[0]];
+    p1 = positions[indices[1]] - p0;   t1 = texcoords[indices[1]] - t0;
+    p2 = positions[indices[2]] - p0;   t2 = texcoords[indices[2]] - t0;
 
-    
-    float temp = (t1.x * t2.y - t2.x * t1.y);
+    //not sure if this should be division or not
+    float temp = 1.0f / (t1.x * t2.y - t2.x * t1.y);
 
-    t.x = t2.y * p1.x + (-t1.y * p2.x);
-    t.y = t2.y * p1.y + (-t1.y * p2.y);
-    t.z = t2.y * p1.z + (-t1.y * p2.z);
+    /*
+    t.x = t2.y * p1.x + (-t1.y * p2.x) * temp;
+    t.y = t2.y * p1.y + (-t1.y * p2.y) * temp;
+    t.z = t2.y * p1.z + (-t1.y * p2.z) * temp;
+  */
 
+    t = (p1 * t2.y - p2 * t1.y) * temp;
     //b.x = (-t2.x * p1.x) + t1.x * p2.x;
     //b.y = (-t2.x * p1.y) + t1.x * p2.y;
     //b.z = (-t2.x + p1.z) + t1.x * p2.z;
 
-    t = glm::normalize(temp * t);
+    t = glm::normalize(t);
 
     //add it to the accumulation tangents of the adjacent vertices
     tangents[indices[0]] = t;
@@ -187,7 +191,7 @@ std::vector<glm::fvec3> generate_tangents(tinyobj::mesh_t const& model) {
   // normalize and orthogonalize accumulated vertex tangents
   for (unsigned i = 0; i < tangents.size(); ++i) {
     // implement orthogonalization and normalization here
-    tangents[i] = glm::normalize(tangents[i] - normals[i] * dot(normals[i], tangents[i]));
+    tangents[i] = glm::normalize(tangents[i] - normals[i] * glm::dot(normals[i], tangents[i]));
   }
 
   //throw std::logic_error("Tangent creation not implemented yet");
