@@ -2,7 +2,6 @@
 
 uniform sampler2D ColorTex;
 in vec2 pass_TexCord;
-in vec3 pass_Normal;
 
 out vec4 out_Color;
 

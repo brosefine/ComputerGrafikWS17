@@ -48,17 +48,17 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,textures{}
 {
   //add planets and moon
-  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 3.0f, sun, 20, false}));
-  planets.insert(std::pair<std::string, planet>("mercury", {0.25f, 0.02f, 3.0f, merkur, 2, true}));
-  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.074f, 5.0f, venus, 4, true}));
-  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.063f, 7.0f, earth, 6, true}));
-  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.051f, 9.0f, mars, 8, true}));
-  planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.027f, 11.0f, jupiter, 10, false}));
-  planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.020f, 13.0f, saturn, 12, false}));
-  planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.014f, 15.0f, uranus, 14, false}));
-  planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.011f, 17.0f, neptune, 16, false}));
+  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f, sun, false}));
+  planets.insert(std::pair<std::string, planet>("mercury", {0.25f, 0.02f, 3.0f, merkur, true}));
+  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.074f, 5.0f, venus, true}));
+  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.063f, 7.0f, earth, true}));
+  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.051f, 9.0f, mars, true}));
+  planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.027f, 11.0f, jupiter, false}));
+  planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.020f, 13.0f, saturn, false}));
+  planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.014f, 15.0f, uranus, false}));
+  planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.011f, 17.0f, neptune, false}));
 
-  moons.insert(std::pair<std::string, moon>("moon", {0.04f, 6.0f, 1.0f, grey, 18, true, "earth"}));
+  moons.insert(std::pair<std::string, moon>("moon", {0.04f, 2.0f, 1.0f, grey, true, "earth"}));
   //sky is planet sphere
   //add stars
   addStars(1500);
@@ -124,11 +124,20 @@ void ApplicationSolar::render() const {
 //render skysphere
 void ApplicationSolar::renderSky() const {
   //disable depth test, so skybox is behind everything else
-  glDepthMask(GL_FALSE); 
-  planet sky (1.0f, 0.0f, 0.0f, {0.2f, 0.2f, 0.2f}, 1, false);
-  sky.tex_objs_.push_back(m_texture_object);
-  //transform skysphere
-  upload_sky_transforms(sky);
+  glDepthMask(GL_FALSE);
+
+  //upload matrices to sky shader
+  glUseProgram(m_shaders.at("sky").handle);
+  glUniformMatrix4fv(m_shaders.at("sky").u_locs.at("ModelMatrix"),
+                     1, GL_FALSE, glm::value_ptr(rotation));
+
+  //bind texture to shader
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+
+  int color_sampler_location = glGetUniformLocation(m_shaders.at("sky").handle, "ColorTex");
+  glUseProgram(m_shaders.at("sky").handle);
+  glUniform1i(color_sampler_location, 0);
   // bind the VAO to draw
   glBindVertexArray(planet_object.vertex_AO);
 
@@ -170,23 +179,35 @@ void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
   model_matrix = glm::rotate(model_matrix, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
-
-  //upload matrices to current shader
-  glUseProgram(m_shaders.at(shaderName).handle);
-  glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
-                     1, GL_FALSE, glm::value_ptr(model_matrix));
-
-  // extra matrix for normal transformation to keep them orthogonal to surface
   glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
-  glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
-                     1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+  if(moon.has_Normals_ && shaderName == "planet_tex")
+  {//upload matrices to current shader
+    glUseProgram(m_shaders.at("planet_normal_tex").handle);
+    glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("ModelMatrix"),
+                       1, GL_FALSE, glm::value_ptr(model_matrix));
+  
+    // extra matrix for normal transformation to keep them orthogonal to surface
+    glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("NormalMatrix"),
+                       1, GL_FALSE, glm::value_ptr(normal_matrix));
+  } else {
+    //upload matrices to current shader
+    glUseProgram(m_shaders.at(shaderName).handle);
+    glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
+                       1, GL_FALSE, glm::value_ptr(model_matrix));
+
+    // extra matrix for normal transformation to keep them orthogonal to surface
+    glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
+                       1, GL_FALSE, glm::value_ptr(normal_matrix));
+  }
+
 
   //do not upload colors or textures when using rainbow-shader
   if(shaderName == "rainbow"){
     return;
   }
   else if (shaderName == "planet_tex"){
-    upload_texture(planet);
+    upload_texture(moon);
   } else{
     //upload_camera_position();
     upload_color(color);
@@ -205,19 +226,11 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
-
-  //upload matrices to current shader
-  glUseProgram(m_shaders.at(shaderName).handle);
-  glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
-                     1, GL_FALSE, glm::value_ptr(model_matrix));
-
-  // extra matrix for normal transformation to keep them orthogonal to surface
+  model_matrix = glm::rotate(model_matrix, float(glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
   glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
-  glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
-                     1, GL_FALSE, glm::value_ptr(normal_matrix));
 
   //upload matrices to normal shader if normal map exists
-  if(planet.has_Normals_ && shaderName != "rainbow")
+  if(planet.has_Normals_ && shaderName == "planet_tex")
   {//upload matrices to current shader
     glUseProgram(m_shaders.at("planet_normal_tex").handle);
     glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("ModelMatrix"),
@@ -226,7 +239,17 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
     // extra matrix for normal transformation to keep them orthogonal to surface
     glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("NormalMatrix"),
                        1, GL_FALSE, glm::value_ptr(normal_matrix));
+  } else {
+    //upload matrices to current shader
+    glUseProgram(m_shaders.at(shaderName).handle);
+    glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
+                       1, GL_FALSE, glm::value_ptr(model_matrix));
+
+    // extra matrix for normal transformation to keep them orthogonal to surface
+    glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
+                       1, GL_FALSE, glm::value_ptr(normal_matrix));
   }
+
 
 //do not upload colors or shaders when using rainbow-shader
   if(shaderName == "rainbow"){
@@ -252,53 +275,19 @@ void ApplicationSolar::upload_sun_transforms(planet const& sun) const{
   glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
+  model_matrix = glm::rotate(model_matrix, float(0.1f * glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
 
   //upload matrices to sun shader
   glUseProgram(m_shaders.at("sun").handle);
   glUniformMatrix4fv(m_shaders.at("sun").u_locs.at("ModelMatrix"),
                      1, GL_FALSE, glm::value_ptr(model_matrix));
 
-  // extra matrix for normal transformation to keep them orthogonal to surface
-  glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
-  glUniformMatrix4fv(m_shaders.at("sun").u_locs.at("NormalMatrix"),
-                     1, GL_FALSE, glm::value_ptr(normal_matrix));
-
   //bind texture to shader
-  glActiveTexture(GL_TEXTURE0 + sun.tex_);
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, sun.tex_objs_[0].handle);
 
   int color_sampler_location = glGetUniformLocation(m_shaders.at("sun").handle, "ColorTex");
   glUseProgram(m_shaders.at("sun").handle);
-  glUniform1i(color_sampler_location, sun.tex_);
-}
-
-//transform sky and upload to shader
-void ApplicationSolar::upload_sky_transforms(planet const& sky) const{
-  //render and upload planets
-  float s = sky.size_;
-  float r = sky.rotation_speed_;
-  float d = sky.distance_;
-  glm::fvec3 color = sky.color_;
-
-  //transform model matrix accoding to planet attributes
-  glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(r*glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
-  model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
-  model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
-  //upload matrices to sky shader
-  glUseProgram(m_shaders.at("sky").handle);
-  glUniformMatrix4fv(m_shaders.at("sky").u_locs.at("ModelMatrix"),
-                     1, GL_FALSE, glm::value_ptr(rotation));
-
-  // extra matrix for normal transformation to keep them orthogonal to surface
-  glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
-  glUniformMatrix4fv(m_shaders.at("sky").u_locs.at("NormalMatrix"),
-                     1, GL_FALSE, glm::value_ptr(normal_matrix));
-  //bind texture to shader
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, sky.tex_objs_[0].handle);
-
-  int color_sampler_location = glGetUniformLocation(m_shaders.at("sky").handle, "ColorTex");
-  glUseProgram(m_shaders.at("sky").handle);
   glUniform1i(color_sampler_location, 0);
 }
 
@@ -516,7 +505,6 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.emplace("sun", shader_program{m_resource_path + "shaders/simple_sun.vert",
                                            m_resource_path + "shaders/simple_sun.frag"});
   // request uniform locations for shader program
-  m_shaders.at("sun").u_locs["NormalMatrix"] = -1;
   m_shaders.at("sun").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sun").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sun").u_locs["ProjectionMatrix"] = -1;
@@ -528,7 +516,6 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.emplace("sky", shader_program{m_resource_path + "shaders/sky.vert",
                                            m_resource_path + "shaders/sky.frag"});
   // request uniform locations for shader program
-  m_shaders.at("sky").u_locs["NormalMatrix"] = -1;
   m_shaders.at("sky").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sky").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sky").u_locs["ProjectionMatrix"] = -1;
@@ -774,9 +761,9 @@ void ApplicationSolar::initializeTextures(){
     //get moon name
     std::string p_name = i.first;
     //create file path
-    std::string path = "textures/" + p_name + ".png";
+    std::string path = "textures/" + p_name;
     //load texture from file
-    pixel_data texture = texture_loader::file(m_resource_path + path);
+    pixel_data texture = texture_loader::file(m_resource_path + path + ".png");
     //new texture object for current moon
     i.second.tex_objs_.push_back(texture_object{});
     //bind texture to texture_objec
@@ -788,6 +775,22 @@ void ApplicationSolar::initializeTextures(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
+
+    if(i.second.has_Normals_){
+      std::cout << "hi" << std::endl;
+      pixel_data n_texture = texture_loader::file(m_resource_path + path + "_normal.png");
+      //new texture_object for current planet
+      i.second.tex_objs_.push_back(texture_object{});
+      //bind normal map to texture_object
+      glActiveTexture(GL_TEXTURE1);
+      glGenTextures(1, &i.second.tex_objs_[1].handle);
+      glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[1].handle);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, n_texture.width, n_texture.height, 0, n_texture.channels, n_texture.channel_type, n_texture.ptr());
+    }
   }
 
   //skysphere texture

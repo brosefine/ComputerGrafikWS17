@@ -49,12 +49,11 @@ struct shader_program {
 
 // planet struct with values size, rotation speed, distance & name
 struct planet {
-  planet(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color, int tex, bool has_Normals)
+  planet(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color, bool has_Normals)
    :size_{size}
    ,rotation_speed_{rotation_speed}
    ,distance_{distance}
    ,color_{color}
-   ,tex_{tex}
    ,tex_objs_{}
    ,has_Normals_{has_Normals}
    {}
@@ -66,8 +65,6 @@ struct planet {
   float distance_;
   //color
   glm::fvec3 color_;
-  //texture
-  int tex_;
   //texture objects
   std::vector<texture_object> tex_objs_;
   //has normal texture
@@ -75,8 +72,8 @@ struct planet {
 };
 
   struct moon : public planet {
-  moon(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color, int tex, bool has_Normals, std::string const& planet_name)
-   :planet{size, rotation_speed, distance, color, tex, has_Normals}
+  moon(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color, bool has_Normals, std::string const& planet_name)
+   :planet{size, rotation_speed, distance, color, has_Normals}
    ,planet_name_{planet_name}{}
 
   std::string planet_name_;
