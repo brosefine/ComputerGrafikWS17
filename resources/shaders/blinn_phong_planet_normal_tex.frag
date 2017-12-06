@@ -9,7 +9,7 @@ vec3 specular = vec3(0.5,0.5,0.5);
 vec3 ambient = vec3(0.5,0.5,0.5);
 //material color values
 vec3 pass_matSpecular = vec3(1.0, 1.0, 1.0);
-float pass_matShininess = 50.0;
+float pass_matShininess = 10.0;
 
 in vec3 pass_Normal;
 in vec3 pass_Tangent;
@@ -22,8 +22,8 @@ in vec2 pass_TexCord;
 out vec4 out_Color;
 
 vec3 Color = texture(ColorTex, pass_TexCord).xyz;
-vec3 Normal = texture(NormalTex, pass_TexCord).xyz;
-
+vec3 Normal = (vec3((texture(NormalTex, pass_TexCord).xy * 2.0 - 1.0), texture(NormalTex, pass_TexCord).z));
+//vec3 Normal = vec3(texture(NormalTex, pass_TexCord).xyz * 2.0 - 1.0);
 //calculate ambient color part (rgb)
 vec3 ambientLighting(){
 
@@ -52,10 +52,15 @@ vec3 specularLighting(in vec3 N, in vec3 L, in vec3 V){
 }
 
 void main() {
+
+	vec3 B = normalize(cross(pass_Normal, pass_Tangent));
+	mat3 M = transpose(mat3(pass_Tangent, B, pass_Normal));
+
+	vec3 newNorm = M * Normal;
 	
 	vec3 L = normalize(pass_LightDir);
 	vec3 V = normalize(pass_CameraDir);
-	vec3 N = normalize(pass_Normal);
+	vec3 N = normalize(newNorm);
 
 	vec3 amb = ambientLighting();
 	vec3 dif = diffuseLighting(N, L);
@@ -63,4 +68,5 @@ void main() {
 
 	//output color combines all parts (ambient, diffuse, specular)
 	out_Color = vec4((amb + dif + spe), 1.0);
+	//out_Color = vec4(newNorm, 1.0);
 }
