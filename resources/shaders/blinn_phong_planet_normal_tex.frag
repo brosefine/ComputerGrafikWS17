@@ -33,7 +33,7 @@ vec3 ambientLighting(){
 //calculate diffuse color part (rgb)
 vec3 diffuseLighting(in vec3 N, in vec3 L){
 
-	float diffuseTerm = clamp(dot(N,L),0,1);
+	float diffuseTerm = max(dot(N,L),0);
 	return Color * diffuse * diffuseTerm;
 
 }
@@ -45,7 +45,7 @@ vec3 specularLighting(in vec3 N, in vec3 L, in vec3 V){
 
 	if(dot(N, L) > 0){
 		vec3 H = normalize(L+V);
-		specularTerm = pow(dot(N,H), pass_matShininess);
+		specularTerm = pow(max(dot(N,H),0), pass_matShininess);
 	}
 
 	return pass_matSpecular * specular * specularTerm;
@@ -54,7 +54,7 @@ vec3 specularLighting(in vec3 N, in vec3 L, in vec3 V){
 void main() {
 
 	vec3 B = normalize(cross(pass_Normal, pass_Tangent));
-	mat3 M = transpose(mat3(pass_Tangent, B, pass_Normal));
+	mat3 M = mat3(pass_Tangent, B, pass_Normal);
 
 	vec3 newNorm = M * Normal;
 	

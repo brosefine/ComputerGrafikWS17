@@ -30,7 +30,7 @@ vec3 ambientLighting(){
 //calculate diffuse color part (rgb)
 vec3 diffuseLighting(in vec3 N, in vec3 L){
 
-	float diffuseTerm = clamp(dot(N,L),0,1);
+	float diffuseTerm = max(dot(N,L),0);
 	return pass_Color * diffuse * diffuseTerm;
 
 }

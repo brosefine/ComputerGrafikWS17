@@ -48,15 +48,15 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,textures{}
 {
   //add planets and moon
-  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f, sun, 20, false}));
-  planets.insert(std::pair<std::string, planet>("mercury", {0.25f, 0.2f, 3.0f, merkur, 2, true}));
-  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.74f, 5.0f, venus, 4, true}));
-  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.63f, 7.0f, earth, 6, true}));
-  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.51f, 9.0f, mars, 8, true}));
-  planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.27f, 11.0f, jupiter, 10, false}));
-  planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.20f, 13.0f, saturn, 12, false}));
-  planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.14f, 15.0f, uranus, 14, false}));
-  planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.11f, 17.0f, neptune, 16, false}));
+  planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 3.0f, sun, 20, false}));
+  planets.insert(std::pair<std::string, planet>("mercury", {0.25f, 0.02f, 3.0f, merkur, 2, true}));
+  planets.insert(std::pair<std::string, planet>("venus", {0.25f, 0.074f, 5.0f, venus, 4, true}));
+  planets.insert(std::pair<std::string, planet>("earth", {0.25f, 0.063f, 7.0f, earth, 6, true}));
+  planets.insert(std::pair<std::string, planet>("mars", {0.25f, 0.051f, 9.0f, mars, 8, true}));
+  planets.insert(std::pair<std::string, planet>("jupiter", {0.5f, 0.027f, 11.0f, jupiter, 10, false}));
+  planets.insert(std::pair<std::string, planet>("saturn", {0.5f, 0.020f, 13.0f, saturn, 12, false}));
+  planets.insert(std::pair<std::string, planet>("uranus", {0.3f, 0.014f, 15.0f, uranus, 14, false}));
+  planets.insert(std::pair<std::string, planet>("neptune", {0.3f, 0.011f, 17.0f, neptune, 16, false}));
 
   moons.insert(std::pair<std::string, moon>("moon", {0.04f, 6.0f, 1.0f, grey, 18, true, "earth"}));
 
@@ -207,7 +207,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
 
-  if(planet.has_Normals_)
+  if(planet.has_Normals_ && shaderName != "rainbow")
   {//upload matrices to current shader
     glUseProgram(m_shaders.at("planet_normal_tex").handle);
     glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("ModelMatrix"),
@@ -219,9 +219,12 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   }
 
 //do not upload colors when using rainbow-shader
-  if (shaderName == "planet_tex"){
+  if(shaderName == "rainbow"){
+    return;
+  }
+  else if (shaderName == "planet_tex"){
     upload_texture(planet);
-  } else if(shaderName != "rainbow"){
+  } else{
     //upload_camera_position();
     upload_color(color);
   }
@@ -277,12 +280,12 @@ void ApplicationSolar::upload_sky_transforms(planet const& sky) const{
   glUniformMatrix4fv(m_shaders.at("sky").u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
 
-  glActiveTexture(GL_TEXTURE0 + sky.tex_);
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, sky.tex_objs_[0].handle);
 
   int color_sampler_location = glGetUniformLocation(m_shaders.at("sky").handle, "ColorTex");
   glUseProgram(m_shaders.at("sky").handle);
-  glUniform1i(color_sampler_location, sky.tex_);
+  glUniform1i(color_sampler_location, 0);
 }
 
 void ApplicationSolar::upload_orbit_transforms(planet const& planet) const{
@@ -343,26 +346,26 @@ void ApplicationSolar::upload_color(glm::fvec3 const& color) const {
 
 void ApplicationSolar::upload_texture(planet const& planet) const{
   if(planet.has_Normals_){
-    glActiveTexture(GL_TEXTURE0 + planet.tex_);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
 
     int color_sampler_location = glGetUniformLocation(m_shaders.at("planet_normal_tex").handle, "ColorTex");
     glUseProgram(m_shaders.at("planet_normal_tex").handle);
-    glUniform1i(color_sampler_location, planet.tex_);
+    glUniform1i(color_sampler_location,0);
 
-    glActiveTexture(GL_TEXTURE0 + (planet.tex_ + 1));
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[1].handle);
 
     color_sampler_location = glGetUniformLocation(m_shaders.at("planet_normal_tex").handle, "NormalTex");
     glUseProgram(m_shaders.at("planet_normal_tex").handle);
-    glUniform1i(color_sampler_location, (planet.tex_ + 1));
+    glUniform1i(color_sampler_location, 1);
   } else {
-    glActiveTexture(GL_TEXTURE0 + planet.tex_);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
 
     int color_sampler_location = glGetUniformLocation(m_shaders.at("planet_tex").handle, "ColorTex");
     glUseProgram(m_shaders.at("planet_tex").handle);
-    glUniform1i(color_sampler_location, planet.tex_);
+    glUniform1i(color_sampler_location, 0);
   }
 }
 
@@ -726,7 +729,7 @@ void ApplicationSolar::initializeTextures(){
     i.second.tex_objs_.push_back(texture_object{});
 
 
-    glActiveTexture(GL_TEXTURE0 + i.second.tex_);
+    glActiveTexture(GL_TEXTURE0);
     glGenTextures(1, &i.second.tex_objs_[0].handle);
     glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[0].handle);
 
@@ -739,15 +742,16 @@ void ApplicationSolar::initializeTextures(){
       pixel_data n_texture = texture_loader::file(m_resource_path + path + "_normal.png");
       textures.push_back(texture);
       i.second.tex_objs_.push_back(texture_object{});
+      std::cout << m_resource_path + path + "_normal.png" << std::endl;
 
-      glActiveTexture(GL_TEXTURE0 + (i.second.tex_ + 1));
+      glActiveTexture(GL_TEXTURE1);
       glGenTextures(1, &i.second.tex_objs_[1].handle);
       glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[1].handle);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, n_texture.width, n_texture.height, 0, n_texture.channels, n_texture.channel_type, n_texture.ptr());
     }
   }
 
@@ -777,7 +781,7 @@ void ApplicationSolar::initializeTextures(){
   pixel_data texture = texture_loader::file(m_resource_path + "textures/sky.png");
   textures.push_back(texture);
 
-  glActiveTexture(GL_TEXTURE1);
+  glActiveTexture(GL_TEXTURE0);
   glGenTextures(1, &m_texture_object.handle);
   glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
 
