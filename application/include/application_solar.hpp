@@ -52,6 +52,7 @@ class ApplicationSolar : public Application {
   void glUniform(std::string mat_name, glm::fmat4 mat);
   //initialze orbit 
   void initializeOrbit();
+  void initializeSquad();
   //initialize textures
   void initializeTextures();
 
@@ -59,19 +60,27 @@ class ApplicationSolar : public Application {
  protected:
   void initializeShaderPrograms();
   void initializeGeometry();
+  void initializeFramebufferHandles();
+  void initializeFramebuffer();
   void updateView();
 
   // cpu representation of model
   model_object planet_object;
   model_object star_object;
   model_object orbit_object;
+  model_object squad_object;
+
   texture_object m_texture_object;
+  texture_object m_renderbuffer_object;
+  texture_object m_framebuffer_object;
+  texture_object sky_texture_object;
   // planet, moon, star and orbit representations
   std::map<std::string, planet> planets;
   std::map<std::string, moon> moons;
   std::vector<float> stars;
   std::vector<float> orbit;
-  std::vector<pixel_data> textures;
+  std::vector<float> squad;
+  
 
   //used shader
   std::string shaderName = "planet_comic";

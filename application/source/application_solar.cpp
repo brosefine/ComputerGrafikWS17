@@ -45,7 +45,6 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,moons{}
  ,stars{}
  ,orbit{}
- ,textures{}
 {
   //add planets and moon
   planets.insert(std::pair<std::string, planet>("sun", {1.0f, 0.0f, 0.0f, sun, false}));
@@ -64,6 +63,8 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   addStars(1500);
   //add orbits
   initializeOrbit();
+  initializeFramebufferHandles();
+  initializeFramebuffer();
   //add textures
   initializeTextures();
   initializeGeometry();
@@ -119,6 +120,8 @@ void ApplicationSolar::render() const {
 
    glBindVertexArray(0);
 
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 }
 
 //render skysphere
@@ -133,7 +136,7 @@ void ApplicationSolar::renderSky() const {
 
   //bind texture to shader
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+  glBindTexture(GL_TEXTURE_2D, sky_texture_object.handle);
 
   int color_sampler_location = glGetUniformLocation(m_shaders.at("sky").handle, "ColorTex");
   glUseProgram(m_shaders.at("sky").handle);
@@ -251,16 +254,16 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   }
 
 
-//do not upload colors or shaders when using rainbow-shader
-  if(shaderName == "rainbow"){
-    return;
-  }
-  else if (shaderName == "planet_tex"){
-    upload_texture(planet);
-  } else{
-    //upload_camera_position();
-    upload_color(color);
-  }
+  //do not upload colors or shaders when using rainbow-shader
+    if(shaderName == "rainbow"){
+      return;
+    }
+    else if (shaderName == "planet_tex"){
+      upload_texture(planet);
+    } else{
+      //upload_camera_position();
+      upload_color(color);
+    }
 }
 
 //transform sun sphere and upload to shaders
@@ -499,18 +502,18 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("rainbow").u_locs["ViewMatrix"] = -1;
   m_shaders.at("rainbow").u_locs["ProjectionMatrix"] = -1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// store shader program objects in container
+  // store shader program objects in container
   m_shaders.emplace("sun", shader_program{m_resource_path + "shaders/simple_sun.vert",
                                            m_resource_path + "shaders/simple_sun.frag"});
   // request uniform locations for shader program
   m_shaders.at("sun").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sun").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sun").u_locs["ProjectionMatrix"] = -1;
-   m_shaders.at("sun").u_locs["ColorTex"] = -1;
+  m_shaders.at("sun").u_locs["ColorTex"] = -1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
    // store shader program objects in container
   m_shaders.emplace("sky", shader_program{m_resource_path + "shaders/sky.vert",
@@ -519,9 +522,9 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("sky").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sky").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sky").u_locs["ProjectionMatrix"] = -1;
-   m_shaders.at("sky").u_locs["ColorTex"] = -1;
+  m_shaders.at("sky").u_locs["ColorTex"] = -1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
   m_shaders.emplace("planet", shader_program{m_resource_path + "shaders/blinn_phong_planet.vert",
@@ -534,7 +537,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["matAmbient"] = -1;
   m_shaders.at("planet").u_locs["matDiffuse"] = -1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   m_shaders.emplace("planet_tex", shader_program{m_resource_path + "shaders/blinn_phong_planet_tex.vert",
                                            m_resource_path + "shaders/blinn_phong_planet_tex.frag"});
@@ -545,7 +548,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_tex").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("planet_tex").u_locs["ColorTex"] = -1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   m_shaders.emplace("planet_normal_tex", shader_program{m_resource_path + "shaders/blinn_phong_planet_normal_tex.vert",
                                            m_resource_path + "shaders/blinn_phong_planet_normal_tex.frag"});
@@ -557,7 +560,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_normal_tex").u_locs["ColorTex"] = -1;
   m_shaders.at("planet_normal_tex").u_locs["NormalTex"] = -1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
   m_shaders.emplace("planet_comic", shader_program{m_resource_path + "shaders/cel_shading_planet.vert",
@@ -570,7 +573,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_comic").u_locs["matColor"] = -1;
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   m_shaders.emplace("stars", shader_program{m_resource_path + "shaders/simple_stars.vert",
                                            m_resource_path + "shaders/simple_stars.frag"});
@@ -578,7 +581,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("stars").u_locs["ViewMatrix"] = -1;
   m_shaders.at("stars").u_locs["ProjectionMatrix"] = -1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   m_shaders.emplace("orbit", shader_program{m_resource_path + "shaders/simple_orbit.vert",
                                            m_resource_path + "shaders/simple_orbit.frag"});
@@ -597,6 +600,8 @@ void ApplicationSolar::initializeGeometry() {
   model star_model = model{stars, (model::NORMAL | model::POSITION), {1}};
   //load orbit in model
   model orbit_model = model{orbit, (model::POSITION), {1}};
+  //load stars in model
+  model squad_model = model{squad, (model::TEXCOORD | model::POSITION), {1}};
 
   // generate vertex array object
   glGenVertexArrays(1, &planet_object.vertex_AO);
@@ -691,8 +696,62 @@ void ApplicationSolar::initializeGeometry() {
   // transfer number of indices to model object 
   orbit_object.num_elements = GLsizei(orbit_model.data.size()/3);
 
+  // generate vertex array object
+  glGenVertexArrays(1, &squad_object.vertex_AO);
+  // bind the array for attaching buffers
+  glBindVertexArray(squad_object.vertex_AO);
+
+  // generate generic buffer
+  glGenBuffers(1, &squad_object.vertex_BO);
+  // bind this as an vertex array buffer containing all attributes
+  glBindBuffer(GL_ARRAY_BUFFER, squad_object.vertex_BO);
+  // configure currently bound array buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * squad_model.data.size(), squad_model.data.data(), GL_STATIC_DRAW);  
+
+  // activate first attribute on gpu
+  glEnableVertexAttribArray(0);
+  // first attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, squad_model.vertex_bytes, squad_model.offsets[model::POSITION]);
+  // activate second attribute on gpu
+  glEnableVertexAttribArray(1);
+  // second attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(1, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, squad_model.vertex_bytes, squad_model.offsets[model::TEXCOORD]);
+
+  // store type of primitive to draw
+  squad_object.draw_mode = GL_TRIANGLE_STRIP;
+  // transfer number of indices to model object 
+  squad_object.num_elements = GLsizei(squad_model.data.size()/6);
+
   glBindVertexArray(0); 
 
+}
+
+void ApplicationSolar::initializeFramebufferHandles(){
+  glGenRenderbuffers(1, &m_renderbuffer_object.handle);
+  glBindRenderbuffer(GL_RENDERBUFFER, m_renderbuffer_object.handle);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, GLsizei(1920u), GLsizei(1080u));
+
+  glActiveTexture(GL_TEXTURE0);
+  glGenTextures(1, &m_texture_object.handle);
+  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, GLsizei(1920u), GLsizei(1080u), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+}
+
+void ApplicationSolar::initializeFramebuffer(){
+  glGenFramebuffers(1, &m_framebuffer_object.handle);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_object.handle); 
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
+                        m_texture_object.handle, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
+                        GL_RENDERBUFFER, m_renderbuffer_object.handle);
+
+  GLenum draw_buffers[1] = {GL_COLOR_ATTACHMENT1};
+  glDrawBuffers(1, draw_buffers);
+
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if(status != GL_FRAMEBUFFER_COMPLETE) {std::cout << "ooooops" << std::endl;}
 }
 
 //fill vector with random numbers for x stars
@@ -711,12 +770,50 @@ void ApplicationSolar::initializeOrbit(){
     orbit.push_back(0.0f);
     orbit.push_back(-sin((i*M_PI)/180));
   }
-//pushback the first coordinates so that the circle closes
+  //pushback the first coordinates so that the circle closes
   orbit.push_back(1.0f);
   orbit.push_back(0.0f);
   orbit.push_back(-0.0f);
 
 }
+
+void ApplicationSolar::initializeSquad(){
+  //v1 coordinates
+  squad.push_back(-1.0f);
+  squad.push_back(-1.0f);
+  squad.push_back(0.0f);
+  //v1 tex coordinates
+  squad.push_back(0.0f);
+  squad.push_back(0.0f);
+  
+  //v2 coordinates
+  squad.push_back(1.0f);
+  squad.push_back(-1.0f);
+  squad.push_back(0.0f);
+  //v2 tex coordinates
+  squad.push_back(1.0f);
+  squad.push_back(0.0f);
+  
+  //v4 coordinates
+  squad.push_back(-1.0f);
+  squad.push_back(1.0f);
+  squad.push_back(0.0f);
+  //v4 tex coordinates
+  squad.push_back(0.0f);
+  squad.push_back(1.0f);
+  
+  //v3 coordinates
+  squad.push_back(1.0f);
+  squad.push_back(1.0f);
+  squad.push_back(0.0f);
+  //v3 tex coordinates
+  squad.push_back(1.0f);
+  squad.push_back(1.0f);
+  
+
+
+}
+
 //load all textures
 void ApplicationSolar::initializeTextures(){
   //planet textures + sun
@@ -777,7 +874,6 @@ void ApplicationSolar::initializeTextures(){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
 
     if(i.second.has_Normals_){
-      std::cout << "hi" << std::endl;
       pixel_data n_texture = texture_loader::file(m_resource_path + path + "_normal.png");
       //new texture_object for current planet
       i.second.tex_objs_.push_back(texture_object{});
@@ -795,10 +891,10 @@ void ApplicationSolar::initializeTextures(){
 
   //skysphere texture
   pixel_data texture = texture_loader::file(m_resource_path + "textures/sky.png");
-  //bind sky texture to m_texture_object, which is later given to skysphere
+  //bind sky texture to sky_texture_object, which is later given to skysphere
   glActiveTexture(GL_TEXTURE0);
-  glGenTextures(1, &m_texture_object.handle);
-  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+  glGenTextures(1, &sky_texture_object.handle);
+  glBindTexture(GL_TEXTURE_2D, sky_texture_object.handle);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
