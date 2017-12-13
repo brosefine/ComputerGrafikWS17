@@ -1,10 +1,12 @@
 #version 150
 
+uniform sampler2D ColorTex;
 in vec3 pass_Normal;
 in vec3 pass_LightDir;
 in vec3 pass_CameraDir;
+in vec2 pass_TexCoord;
 
-in vec3 pass_Color;
+vec3 pass_Color = texture(ColorTex, pass_TexCoord).xyz;
 
 out vec4 out_Color;
 
@@ -28,9 +30,9 @@ float specularLighting(in vec3 N, in vec3 L, in vec3 V){
 void main() {
 	
 	//thickness of outline
-	float outline = 0.35;
+	float outline = 0.32;
 	//number of shade colors
-	float shades = 3;
+	float shades = 6.5;
 	
 	vec3 L = normalize(pass_LightDir);
 	vec3 V = normalize(pass_CameraDir);
@@ -41,7 +43,7 @@ void main() {
 
 	if(dotView < outline){
 		//color outline pixels
-		out_Color = vec4(pass_Color, 1.0);
+		out_Color = vec4(vec3(0.0, 0.0, 0.0), 1.0);
 	} else {
 	
 		//ambient factor

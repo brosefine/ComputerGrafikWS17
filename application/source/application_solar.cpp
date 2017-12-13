@@ -63,6 +63,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   addStars(1500);
   //add orbits
   initializeOrbit();
+  initializeSquad();
   initializeFramebufferHandles();
   initializeFramebuffer();
   //add textures
@@ -74,6 +75,9 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
 
 
 void ApplicationSolar::render() const {
+  glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_object.handle);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   //render Sky before everything else
   renderSky();
 
@@ -118,10 +122,8 @@ void ApplicationSolar::render() const {
     glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
   }
 
-   glBindVertexArray(0);
-
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+  glBindVertexArray(0);
+  renderSquad();
 }
 
 //render skysphere
@@ -148,6 +150,24 @@ void ApplicationSolar::renderSky() const {
   glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
   //enable depth test again
   glDepthMask(1); 
+}
+
+//render screen quad
+void ApplicationSolar::renderSquad() const {
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  glUseProgram(m_shaders.at("squad").handle);
+  //bind texture to shader
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+
+  int color_sampler_location = glGetUniformLocation(m_shaders.at("squad").handle, "ColorTex");
+  glUniform1i(color_sampler_location, 0);
+  // bind the VAO to draw
+   // bind shader to upload uniforms
+  glBindVertexArray(squad_object.vertex_AO);
+  //draw stars
+  glDrawArrays(squad_object.draw_mode, NULL, squad_object.num_elements);  
 }
 
 //update view matrix to all shaders
@@ -205,16 +225,10 @@ void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
   }
 
 
-  //do not upload colors or textures when using rainbow-shader
-  if(shaderName == "rainbow"){
-    return;
-  }
-  else if (shaderName == "planet_tex"){
+  //upload either texture or color
+ 
     upload_texture(moon);
-  } else{
-    //upload_camera_position();
-    upload_color(color);
-  }
+
   
 }
 
@@ -254,16 +268,10 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
   }
 
 
-  //do not upload colors or shaders when using rainbow-shader
-    if(shaderName == "rainbow"){
-      return;
-    }
-    else if (shaderName == "planet_tex"){
+  //upload either texture or color
+  
       upload_texture(planet);
-    } else{
-      //upload_camera_position();
-      upload_color(color);
-    }
+  
 }
 
 //transform sun sphere and upload to shaders
@@ -336,12 +344,6 @@ void ApplicationSolar::upload_orbit_transforms(moon const& moon) const{
 
 //upload planet colors to blinn-phong and cel shader
 void ApplicationSolar::upload_color(glm::fvec3 const& color) const {
-  glUseProgram(m_shaders.at("planet").handle);
-  glUniform3fv(m_shaders.at("planet").u_locs.at("matAmbient"),
-                     1, glm::value_ptr(color));
-  glUniform3fv(m_shaders.at("planet").u_locs.at("matDiffuse"),
-                     1, glm::value_ptr(color));
-
   glUseProgram(m_shaders.at("planet_comic").handle);
   glUniform3fv(m_shaders.at("planet_comic").u_locs.at("matColor"),
                      1, glm::value_ptr(color));
@@ -353,7 +355,7 @@ void ApplicationSolar::upload_color(glm::fvec3 const& color) const {
 //upload textures for given planet
 void ApplicationSolar::upload_texture(planet const& planet) const{
   //if planet has a normal map, upload it to normal-texture shader
-  if(planet.has_Normals_){
+  if(planet.has_Normals_&& shaderName == "planet_tex"){
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
 
@@ -367,13 +369,22 @@ void ApplicationSolar::upload_texture(planet const& planet) const{
     color_sampler_location = glGetUniformLocation(m_shaders.at("planet_normal_tex").handle, "NormalTex");
     glUseProgram(m_shaders.at("planet_normal_tex").handle);
     glUniform1i(color_sampler_location, 1);
-  } else {
+  } else if (shaderName == "planet_tex") {
   //if not, use ordinairy shader without normal map
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
 
     int color_sampler_location = glGetUniformLocation(m_shaders.at("planet_tex").handle, "ColorTex");
     glUseProgram(m_shaders.at("planet_tex").handle);
+    glUniform1i(color_sampler_location, 0);
+  }
+  else{
+    //if not, use ordinairy shader without normal map
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, planet.tex_objs_[0].handle);
+
+    int color_sampler_location = glGetUniformLocation(m_shaders.at("planet_comic").handle, "ColorTex");
+    glUseProgram(m_shaders.at("planet_comic").handle);
     glUniform1i(color_sampler_location, 0);
   }
 }
@@ -399,16 +410,6 @@ void ApplicationSolar::glUniform(std::string mat_name, glm::fmat4 mat){
   //bind shader, update matrix
   glUseProgram(m_shaders.at("stars").handle);
   glUniformMatrix4fv(m_shaders.at("stars").u_locs.at(mat_name),
-                     1, GL_FALSE, glm::value_ptr(mat));
-
-  //bind shader, update matrix
-  glUseProgram(m_shaders.at("rainbow").handle);
-  glUniformMatrix4fv(m_shaders.at("rainbow").u_locs.at(mat_name),
-                     1, GL_FALSE, glm::value_ptr(mat));
-
-  //bind shader, update matrix
-  glUseProgram(m_shaders.at("planet").handle);
-  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at(mat_name),
                      1, GL_FALSE, glm::value_ptr(mat));
 
   glUseProgram(m_shaders.at("planet_tex").handle);
@@ -464,7 +465,7 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
   }
   //change shader
     else if (key == GLFW_KEY_1 && (action == GLFW_PRESS)) {
-      shaderName = "planet";
+      shaderName = "planet_tex";
   }
   //change shader
     else if (key == GLFW_KEY_2 && (action == GLFW_PRESS)) {
@@ -472,11 +473,11 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
   }
   //change shader
     else if (key == GLFW_KEY_3 && (action == GLFW_PRESS)) {
-      shaderName = "rainbow";
+      
   }
   //change shader
     else if (key == GLFW_KEY_4 && (action == GLFW_PRESS)) {
-      shaderName = "planet_tex";
+      
   }
 }
 
@@ -493,16 +494,6 @@ void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
 
 // load shader programs
 void ApplicationSolar::initializeShaderPrograms() {
-  // store shader program objects in container
-  m_shaders.emplace("rainbow", shader_program{m_resource_path + "shaders/simple.vert",
-                                           m_resource_path + "shaders/simple.frag"});
-  // request uniform locations for shader program
-  m_shaders.at("rainbow").u_locs["NormalMatrix"] = -1;
-  m_shaders.at("rainbow").u_locs["ModelMatrix"] = -1;
-  m_shaders.at("rainbow").u_locs["ViewMatrix"] = -1;
-  m_shaders.at("rainbow").u_locs["ProjectionMatrix"] = -1;
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // store shader program objects in container
   m_shaders.emplace("sun", shader_program{m_resource_path + "shaders/simple_sun.vert",
@@ -523,19 +514,6 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("sky").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sky").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("sky").u_locs["ColorTex"] = -1;
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-  m_shaders.emplace("planet", shader_program{m_resource_path + "shaders/blinn_phong_planet.vert",
-                                           m_resource_path + "shaders/blinn_phong_planet.frag"});
-
-  m_shaders.at("planet").u_locs["NormalMatrix"] = -1;
-  m_shaders.at("planet").u_locs["ModelMatrix"] = -1;
-  m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
-  m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
-  m_shaders.at("planet").u_locs["matAmbient"] = -1;
-  m_shaders.at("planet").u_locs["matDiffuse"] = -1;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -570,7 +548,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_comic").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ProjectionMatrix"] = -1;
-  m_shaders.at("planet_comic").u_locs["matColor"] = -1;
+  m_shaders.at("planet_comic").u_locs["ColorTex"] = -1;
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -589,6 +567,12 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("orbit").u_locs["ModelMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ViewMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ProjectionMatrix"] = -1;
+
+   // store shader program objects in container
+  m_shaders.emplace("squad", shader_program{m_resource_path + "shaders/simple_squad.vert",
+                                           m_resource_path + "shaders/simple_squad.frag"});
+  // request uniform locations for shader program
+  m_shaders.at("squad").u_locs["ColorTex"] = -1;
 
 }
 
@@ -720,7 +704,7 @@ void ApplicationSolar::initializeGeometry() {
   // store type of primitive to draw
   squad_object.draw_mode = GL_TRIANGLE_STRIP;
   // transfer number of indices to model object 
-  squad_object.num_elements = GLsizei(squad_model.data.size()/6);
+  squad_object.num_elements = GLsizei(squad_model.data.size()/5);
 
   glBindVertexArray(0); 
 
@@ -785,7 +769,7 @@ void ApplicationSolar::initializeSquad(){
   //v1 tex coordinates
   squad.push_back(0.0f);
   squad.push_back(0.0f);
-  
+  ////////////////////////////
   //v2 coordinates
   squad.push_back(1.0f);
   squad.push_back(-1.0f);
@@ -793,7 +777,7 @@ void ApplicationSolar::initializeSquad(){
   //v2 tex coordinates
   squad.push_back(1.0f);
   squad.push_back(0.0f);
-  
+  ////////////////////////////
   //v4 coordinates
   squad.push_back(-1.0f);
   squad.push_back(1.0f);
@@ -801,7 +785,7 @@ void ApplicationSolar::initializeSquad(){
   //v4 tex coordinates
   squad.push_back(0.0f);
   squad.push_back(1.0f);
-  
+  ////////////////////////////
   //v3 coordinates
   squad.push_back(1.0f);
   squad.push_back(1.0f);
@@ -809,7 +793,6 @@ void ApplicationSolar::initializeSquad(){
   //v3 tex coordinates
   squad.push_back(1.0f);
   squad.push_back(1.0f);
-  
 
 
 }
