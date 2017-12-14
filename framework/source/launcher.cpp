@@ -154,7 +154,7 @@ void Launcher::update_projection(GLFWwindow* m_window, int width, int height) {
   // projection is hor+ 
   glm::fmat4 camera_projection = glm::perspective(fov_y, aspect, 0.1f, 100.0f);
   // upload matrix to gpu
-  m_application->setProjection(camera_projection);
+  m_application->setProjection(camera_projection, width, height);
 }
 
 // load shader programs and update uniform locations

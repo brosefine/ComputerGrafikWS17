@@ -82,10 +82,10 @@ class ApplicationSolar : public Application {
   std::vector<float> orbit;
   std::vector<float> squad;
 
-  int m_greyscale = 0;
-  int m_mirrored_v = 0;
-  int m_mirrored_h = 0;
-  int m_blur = 0;
+  bool m_greyscale = false;
+  bool m_mirrored_v = false;
+  bool m_mirrored_h = false;
+  bool m_blur = false;
   
 
   //used shader

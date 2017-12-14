@@ -392,6 +392,11 @@ void ApplicationSolar::upload_texture(planet const& planet) const{
 //upload projection matrix to all shaders
 void ApplicationSolar::updateProjection() {
   // upload matrix to gpu
+  glBindRenderbuffer(GL_RENDERBUFFER, m_renderbuffer_object.handle);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, GLsizei(m_width), GLsizei(m_height));
+
+  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, GLsizei(m_width), GLsizei(m_height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glUniform("ProjectionMatrix", m_view_projection);
 }
 
@@ -473,27 +478,31 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
   }
   //change shader
     else if (key == GLFW_KEY_7 && (action == GLFW_PRESS)) {
-      if(m_greyscale == 0){
-        m_greyscale = 1;
-      } else {
-        m_greyscale = 0;
-      }
+      m_greyscale = !m_greyscale;
 
       glUseProgram(m_shaders.at("squad").handle);
       glUniform1i(m_shaders.at("squad").u_locs.at("greyscale"), m_greyscale);
   }
   //change shader
+    else if (key == GLFW_KEY_8 && (action == GLFW_PRESS)) {
+      m_mirrored_h = !m_mirrored_h;
+
+      glUseProgram(m_shaders.at("squad").handle);
+      glUniform1i(m_shaders.at("squad").u_locs.at("mirrored_h"), m_mirrored_h);
+  }
     else if (key == GLFW_KEY_9 && (action == GLFW_PRESS)) {
-      if(m_mirrored_v == 0){
-        m_mirrored_v = 1;
-      } else {
-        m_mirrored_v = 0;
-      }
+      m_mirrored_v = !m_mirrored_v;
 
       glUseProgram(m_shaders.at("squad").handle);
       glUniform1i(m_shaders.at("squad").u_locs.at("mirrored_v"), m_mirrored_v);
-      std::cout << m_mirrored_v << std::endl;
   }
+    else if (key == GLFW_KEY_0 && (action == GLFW_PRESS)) {
+      m_blur = !m_blur;
+
+      glUseProgram(m_shaders.at("squad").handle);
+      glUniform1i(m_shaders.at("squad").u_locs.at("blur"), m_blur);
+  }
+
 }
 
 //handle delta mouse movement input
