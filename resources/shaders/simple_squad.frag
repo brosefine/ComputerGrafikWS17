@@ -46,16 +46,16 @@ void main() {
 
 		Color = Color / 4.0;
 
-		Color += texture(ColorTex, TexCoord_00) /16.0;
-		Color += texture(ColorTex, TexCoord_01) /8.0;
-		Color += texture(ColorTex, TexCoord_02) /16.0;
-		Color += texture(ColorTex, TexCoord_10) /8.0;
-		Color += texture(ColorTex, TexCoord_12) /8.0;
-		Color += texture(ColorTex, TexCoord_20) /16.0;
-		Color += texture(ColorTex, TexCoord_21) /8.0;
-		Color += texture(ColorTex, TexCoord_22) /16.0;
+		vec4 Color_00 = texture(ColorTex, TexCoord_00) /16.0;
+		vec4 Color_01 = texture(ColorTex, TexCoord_01) /8.0;
+		vec4 Color_02 = texture(ColorTex, TexCoord_02) /16.0;
+		vec4 Color_10 = texture(ColorTex, TexCoord_10) /8.0;
+		vec4 Color_12 = texture(ColorTex, TexCoord_12) /8.0;
+		vec4 Color_20 = texture(ColorTex, TexCoord_20) /16.0;
+		vec4 Color_21 = texture(ColorTex, TexCoord_21) /8.0;
+		vec4 Color_22 = texture(ColorTex, TexCoord_22) /16.0;
 
-		//Color = Color + Color_00 + Color_01 + Color_02 + Color_10 + Color_12 + Color_20 + Color_21 + Color_22;
+		Color = Color + Color_00 + Color_01 + Color_02 + Color_10 + Color_12 + Color_20 + Color_21 + Color_22;
 	}
 
 
