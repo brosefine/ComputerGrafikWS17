@@ -81,6 +81,11 @@ class ApplicationSolar : public Application {
   std::vector<float> stars;
   std::vector<float> orbit;
   std::vector<float> squad;
+
+  int m_greyscale = 0;
+  int m_mirrored_v = 0;
+  int m_mirrored_h = 0;
+  int m_blur = 0;
   
 
   //used shader

@@ -472,12 +472,27 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
       shaderName = "planet_comic";
   }
   //change shader
-    else if (key == GLFW_KEY_3 && (action == GLFW_PRESS)) {
-      
+    else if (key == GLFW_KEY_7 && (action == GLFW_PRESS)) {
+      if(m_greyscale == 0){
+        m_greyscale = 1;
+      } else {
+        m_greyscale = 0;
+      }
+
+      glUseProgram(m_shaders.at("squad").handle);
+      glUniform1i(m_shaders.at("squad").u_locs.at("greyscale"), m_greyscale);
   }
   //change shader
-    else if (key == GLFW_KEY_4 && (action == GLFW_PRESS)) {
-      
+    else if (key == GLFW_KEY_9 && (action == GLFW_PRESS)) {
+      if(m_mirrored_v == 0){
+        m_mirrored_v = 1;
+      } else {
+        m_mirrored_v = 0;
+      }
+
+      glUseProgram(m_shaders.at("squad").handle);
+      glUniform1i(m_shaders.at("squad").u_locs.at("mirrored_v"), m_mirrored_v);
+      std::cout << m_mirrored_v << std::endl;
   }
 }
 
@@ -573,7 +588,10 @@ void ApplicationSolar::initializeShaderPrograms() {
                                            m_resource_path + "shaders/simple_squad.frag"});
   // request uniform locations for shader program
   m_shaders.at("squad").u_locs["ColorTex"] = -1;
-
+  m_shaders.at("squad").u_locs["greyscale"] = -1;
+  m_shaders.at("squad").u_locs["mirrored_v"] = -1;
+  m_shaders.at("squad").u_locs["mirrored_h"] = -1;
+  m_shaders.at("squad").u_locs["blur"] = -1;
 }
 
 // load models
