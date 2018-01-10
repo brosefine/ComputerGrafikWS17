@@ -71,11 +71,22 @@ struct planet {
   bool has_Normals_;
 };
 
-  struct moon : public planet {
+struct moon : public planet {
   moon(float const& size, float const& rotation_speed, float const& distance, glm::fvec3 const& color, bool has_Normals, std::string const& planet_name)
    :planet{size, rotation_speed, distance, color, has_Normals}
    ,planet_name_{planet_name}{}
 
   std::string planet_name_;
+};
+
+struct cameraBuffer {
+  glm::fmat4 ViewMatrix;
+  glm::fmat4 ProjectionMatrix;
+};
+
+struct lightBuffer {
+  glm::fvec4 position;
+  glm::fvec4 color;
+  float radius;
 };
 #endif

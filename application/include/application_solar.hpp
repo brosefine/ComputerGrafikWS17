@@ -63,6 +63,7 @@ class ApplicationSolar : public Application {
   void initializeGeometry();
   void initializeFramebufferHandles();
   void initializeFramebuffer();
+  void initializeUniformBuffers();
   void updateView();
 
   // cpu representation of model
@@ -75,6 +76,12 @@ class ApplicationSolar : public Application {
   texture_object m_renderbuffer_object;
   texture_object m_framebuffer_object;
   texture_object sky_texture_object;
+
+  cameraBuffer m_cameraBuffer;
+  lightBuffer m_lightBuffer;
+  texture_object ubo_camera;
+  texture_object ubo_light;
+
   // planet, moon, star and orbit representations
   std::map<std::string, planet> planets;
   std::map<std::string, moon> moons;

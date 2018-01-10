@@ -404,6 +404,21 @@ void ApplicationSolar::updateProjection() {
 void ApplicationSolar::uploadUniforms() {
   updateUniformLocations();
 
+  GLuint location;
+  std::vector<GLuint> prog_handles;
+  prog_handles.push_back(m_shaders.at("stars").handle);
+  prog_handles.push_back(m_shaders.at("planet_tex").handle);
+  prog_handles.push_back(m_shaders.at("planet_normal_tex").handle);
+  prog_handles.push_back(m_shaders.at("planet_comic").handle);
+  prog_handles.push_back(m_shaders.at("orbit").handle);
+  prog_handles.push_back(m_shaders.at("sun").handle);
+  prog_handles.push_back(m_shaders.at("sky").handle);
+
+  for(auto i : prog_handles){
+    location = glGetUniformBlockIndex(i, "CameraBlock");
+    glUniformBlockBinding(i, location, 0);
+  }
+
   updateView();
   updateProjection();
 }
@@ -526,6 +541,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("sun").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sun").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sun").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("sun").u_locs["CameraBlock"] = -1;
   m_shaders.at("sun").u_locs["ColorTex"] = -1;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -537,6 +553,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("sky").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sky").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sky").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("sky").u_locs["CameraBlock"] = -1;
   m_shaders.at("sky").u_locs["ColorTex"] = -1;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -548,6 +565,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_tex").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet_tex").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet_tex").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("planet_tex").u_locs["CameraBlock"] = -1;
   m_shaders.at("planet_tex").u_locs["ColorTex"] = -1;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -558,6 +576,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_normal_tex").u_locs["NormalMatrix"] = -1;
   m_shaders.at("planet_normal_tex").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet_normal_tex").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("planet_normal_tex").u_locs["CameraBlock"] = -1;
   m_shaders.at("planet_normal_tex").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("planet_normal_tex").u_locs["ColorTex"] = -1;
   m_shaders.at("planet_normal_tex").u_locs["NormalTex"] = -1;
@@ -571,6 +590,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet_comic").u_locs["NormalMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("planet_comic").u_locs["CameraBlock"] = -1;
   m_shaders.at("planet_comic").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("planet_comic").u_locs["ColorTex"] = -1;
 
@@ -582,6 +602,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   // request uniform locations for shader program
   m_shaders.at("stars").u_locs["ViewMatrix"] = -1;
   m_shaders.at("stars").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("stars").u_locs["CameraBlock"] = -1;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -591,6 +612,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("orbit").u_locs["ModelMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ViewMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("orbit").u_locs["CameraBlock"] = -1;
 
    // store shader program objects in container
   m_shaders.emplace("squad", shader_program{m_resource_path + "shaders/simple_squad.vert",
@@ -764,6 +786,20 @@ void ApplicationSolar::initializeFramebuffer(){
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if(status != GL_FRAMEBUFFER_COMPLETE) {std::cout << "ooooops" << std::endl;}
 }
+
+void ApplicationSolar::initializeUniformBuffers(){
+  glGenBuffers(1, &ubo_camera.handle);
+  glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo_camera.handle);
+  glBufferData(GL_UNIFORM_BUFFER, 32*sizeof(float), nullptr, GL_STATIC_DRAW);
+
+  
+
+  glBindBuffer(GL_UNIFORM_BUFFER, ubo_camera.handle);
+  void* buffer_ptr = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+  std::memcpy(data_ptr, buffer_ptr, buffer_size);
+  glUnmapBuffer(GL_UNIFORM_BUFFER);
+}
+
 
 //fill vector with random numbers for x stars
 void ApplicationSolar::addStars(unsigned int x){
