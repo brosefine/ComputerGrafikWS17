@@ -50,7 +50,7 @@ class ApplicationSolar : public Application {
   //add x stars with random data
   void addStars(unsigned int x);
   //bind shaders and update matrices for all 
-  void glUniform(std::string mat_name, glm::fmat4 mat);
+  void glUniform();
   //initialze orbit 
   void initializeOrbit();
   void initializeSquad();

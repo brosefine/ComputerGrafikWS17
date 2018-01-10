@@ -1,6 +1,11 @@
 #version 150
 #extension GL_ARB_explicit_attrib_location : require
 
+layout (std140) uniform CameraBlock{
+	mat4 ViewMatrix;
+ 	mat4 ProjectionMatrix;
+};
+
 // vertex attributes of VAO
 layout(location = 0) in vec3 in_Position;
 layout(location = 1) in vec3 in_Normal;
@@ -9,8 +14,6 @@ layout(location = 3) in vec3 in_Tangent;
 
 //Matrix Uniforms as specified with glUniformMatrix4fv
 uniform mat4 ModelMatrix;
-uniform mat4 ViewMatrix;
-uniform mat4 ProjectionMatrix;
 uniform mat4 NormalMatrix;
 
 
