@@ -693,128 +693,135 @@ void ApplicationSolar::initializeGeometry() {
   model orbit_model = model{orbit, (model::POSITION), {1}};
   //load stars in model
   model squad_model = model{squad, (model::TEXCOORD | model::POSITION), {1}};
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // generate vertex array object
-  glGenVertexArrays(1, &planet_object.vertex_AO);
-  // bind the array for attaching buffers
-  glBindVertexArray(planet_object.vertex_AO);
+    // generate vertex array object
+    glGenVertexArrays(1, &planet_object.vertex_AO);
+    // bind the array for attaching buffers
+    glBindVertexArray(planet_object.vertex_AO);
 
-  // generate generic buffer
-  glGenBuffers(1, &planet_object.vertex_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ARRAY_BUFFER, planet_object.vertex_BO);
-  // configure currently bound array buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * planet_model.data.size(), planet_model.data.data(), GL_STATIC_DRAW);  
+    // generate generic buffer
+    glGenBuffers(1, &planet_object.vertex_BO);
+    // bind this as an vertex array buffer containing all attributes
+    glBindBuffer(GL_ARRAY_BUFFER, planet_object.vertex_BO);
+    // configure currently bound array buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * planet_model.data.size(), planet_model.data.data(), GL_STATIC_DRAW);  
 
-  // activate first attribute on gpu
-  glEnableVertexAttribArray(0);
-  // first attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::POSITION]);
-  // activate second attribute on gpu
-  glEnableVertexAttribArray(1);
-  // second attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(1, model::NORMAL.components, model::NORMAL.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::NORMAL]);
-  // activate third attribute on gpu
-  glEnableVertexAttribArray(2);
-  // third attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(2, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TEXCOORD]);
+    // activate first attribute on gpu
+    glEnableVertexAttribArray(0);
+    // first attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::POSITION]);
+    // activate second attribute on gpu
+    glEnableVertexAttribArray(1);
+    // second attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(1, model::NORMAL.components, model::NORMAL.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::NORMAL]);
     // activate third attribute on gpu
-  glEnableVertexAttribArray(3);
-  // third attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(3, model::TANGENT.components, model::TANGENT.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TANGENT]);
+    glEnableVertexAttribArray(2);
+    // third attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(2, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TEXCOORD]);
+      // activate third attribute on gpu
+    glEnableVertexAttribArray(3);
+    // third attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(3, model::TANGENT.components, model::TANGENT.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TANGENT]);
 
-  
-  // generate generic buffer
-  glGenBuffers(1, &planet_object.element_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planet_object.element_BO);
-  // configure currently bound array buffer
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, model::INDEX.size * planet_model.indices.size(), planet_model.indices.data(), GL_STATIC_DRAW);
+    
+    // generate generic buffer
+    glGenBuffers(1, &planet_object.element_BO);
+    // bind this as an vertex array buffer containing all attributes
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planet_object.element_BO);
+    // configure currently bound array buffer
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model::INDEX.size * planet_model.indices.size(), planet_model.indices.data(), GL_STATIC_DRAW);
 
-   
+     
 
-  // store type of primitive to draw
-  planet_object.draw_mode = GL_TRIANGLES;
-  // transfer number of indices to model object 
-  planet_object.num_elements = GLsizei(planet_model.indices.size());
+    // store type of primitive to draw
+    planet_object.draw_mode = GL_TRIANGLES;
+    // transfer number of indices to model object 
+    planet_object.num_elements = GLsizei(planet_model.indices.size());
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // generate vertex array object
-  glGenVertexArrays(1, &star_object.vertex_AO);
-  // bind the array for attaching buffers
-  glBindVertexArray(star_object.vertex_AO);
+    // generate vertex array object
+    glGenVertexArrays(1, &star_object.vertex_AO);
+    // bind the array for attaching buffers
+    glBindVertexArray(star_object.vertex_AO);
 
-  // generate generic buffer
-  glGenBuffers(1, &star_object.vertex_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ARRAY_BUFFER, star_object.vertex_BO);
-  // configure currently bound array buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * star_model.data.size(), star_model.data.data(), GL_STATIC_DRAW);  
+    // generate generic buffer
+    glGenBuffers(1, &star_object.vertex_BO);
+    // bind this as an vertex array buffer containing all attributes
+    glBindBuffer(GL_ARRAY_BUFFER, star_object.vertex_BO);
+    // configure currently bound array buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * star_model.data.size(), star_model.data.data(), GL_STATIC_DRAW);  
 
-  // activate first attribute on gpu
-  glEnableVertexAttribArray(0);
-  // first attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, star_model.vertex_bytes, star_model.offsets[model::POSITION]);
-  // activate second attribute on gpu
-  glEnableVertexAttribArray(1);
-  // second attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(1, model::NORMAL.components, model::NORMAL.type, GL_FALSE, star_model.vertex_bytes, star_model.offsets[model::NORMAL]);
+    // activate first attribute on gpu
+    glEnableVertexAttribArray(0);
+    // first attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, star_model.vertex_bytes, star_model.offsets[model::POSITION]);
+    // activate second attribute on gpu
+    glEnableVertexAttribArray(1);
+    // second attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(1, model::NORMAL.components, model::NORMAL.type, GL_FALSE, star_model.vertex_bytes, star_model.offsets[model::NORMAL]);
 
-  // store type of primitive to draw
-  star_object.draw_mode = GL_POINTS;
-  // transfer number of indices to model object 
-  star_object.num_elements = GLsizei(star_model.data.size()/6);
+    // store type of primitive to draw
+    star_object.draw_mode = GL_POINTS;
+    // transfer number of indices to model object 
+    star_object.num_elements = GLsizei(star_model.data.size()/6);
 
-  // generate vertex array object
-  glGenVertexArrays(1, &orbit_object.vertex_AO);
-  // bind the array for attaching buffers
-  glBindVertexArray(orbit_object.vertex_AO);
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // generate generic buffer
-  glGenBuffers(1, &orbit_object.vertex_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ARRAY_BUFFER, orbit_object.vertex_BO);
-  // configure currently bound array buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * orbit_model.data.size(), orbit_model.data.data(), GL_STATIC_DRAW);  
+    // generate vertex array object
+    glGenVertexArrays(1, &orbit_object.vertex_AO);
+    // bind the array for attaching buffers
+    glBindVertexArray(orbit_object.vertex_AO);
 
-  // activate first attribute on gpu
-  glEnableVertexAttribArray(0);
-  // first attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, orbit_model.vertex_bytes, orbit_model.offsets[model::POSITION]);
+    // generate generic buffer
+    glGenBuffers(1, &orbit_object.vertex_BO);
+    // bind this as an vertex array buffer containing all attributes
+    glBindBuffer(GL_ARRAY_BUFFER, orbit_object.vertex_BO);
+    // configure currently bound array buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * orbit_model.data.size(), orbit_model.data.data(), GL_STATIC_DRAW);  
 
-  // store type of primitive to draw
-  orbit_object.draw_mode = GL_LINE_LOOP;
-  // transfer number of indices to model object 
-  orbit_object.num_elements = GLsizei(orbit_model.data.size()/3);
+    // activate first attribute on gpu
+    glEnableVertexAttribArray(0);
+    // first attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, orbit_model.vertex_bytes, orbit_model.offsets[model::POSITION]);
 
-  // generate vertex array object
-  glGenVertexArrays(1, &squad_object.vertex_AO);
-  // bind the array for attaching buffers
-  glBindVertexArray(squad_object.vertex_AO);
+    // store type of primitive to draw
+    orbit_object.draw_mode = GL_LINE_LOOP;
+    // transfer number of indices to model object 
+    orbit_object.num_elements = GLsizei(orbit_model.data.size()/3);
 
-  // generate generic buffer
-  glGenBuffers(1, &squad_object.vertex_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ARRAY_BUFFER, squad_object.vertex_BO);
-  // configure currently bound array buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * squad_model.data.size(), squad_model.data.data(), GL_STATIC_DRAW);  
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // activate first attribute on gpu
-  glEnableVertexAttribArray(0);
-  // first attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, squad_model.vertex_bytes, squad_model.offsets[model::POSITION]);
-  // activate second attribute on gpu
-  glEnableVertexAttribArray(1);
-  // second attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(1, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, squad_model.vertex_bytes, squad_model.offsets[model::TEXCOORD]);
+    // generate vertex array object
+    glGenVertexArrays(1, &squad_object.vertex_AO);
+    // bind the array for attaching buffers
+    glBindVertexArray(squad_object.vertex_AO);
 
-  // store type of primitive to draw
-  squad_object.draw_mode = GL_TRIANGLE_STRIP;
-  // transfer number of indices to model object 
-  squad_object.num_elements = GLsizei(squad_model.data.size()/5);
+    // generate generic buffer
+    glGenBuffers(1, &squad_object.vertex_BO);
+    // bind this as an vertex array buffer containing all attributes
+    glBindBuffer(GL_ARRAY_BUFFER, squad_object.vertex_BO);
+    // configure currently bound array buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * squad_model.data.size(), squad_model.data.data(), GL_STATIC_DRAW);  
+
+    // activate first attribute on gpu
+    glEnableVertexAttribArray(0);
+    // first attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, squad_model.vertex_bytes, squad_model.offsets[model::POSITION]);
+    // activate second attribute on gpu
+    glEnableVertexAttribArray(1);
+    // second attribute is 3 floats with no offset & stride
+    glVertexAttribPointer(1, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, squad_model.vertex_bytes, squad_model.offsets[model::TEXCOORD]);
+
+    // store type of primitive to draw
+    squad_object.draw_mode = GL_TRIANGLE_STRIP;
+    // transfer number of indices to model object 
+    squad_object.num_elements = GLsizei(squad_model.data.size()/5);
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   glBindVertexArray(0); 
-
 }
 
 void ApplicationSolar::initializeFramebufferHandles(){
@@ -876,14 +883,12 @@ void ApplicationSolar::initializeUniformBuffers(){
   glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::fmat4)*2, nullptr, GL_DYNAMIC_DRAW);
 }
 
-
 //fill vector with random numbers for x stars
 void ApplicationSolar::addStars(unsigned int x){
   
   for(int i = 0; i < 6*x; ++i){
     stars.push_back(static_cast <float>(rand()%200)-100);
   }
-
 }
 
 //initialize orbit and fill vector so that it is a circle
@@ -897,7 +902,6 @@ void ApplicationSolar::initializeOrbit(){
   orbit.push_back(1.0f);
   orbit.push_back(0.0f);
   orbit.push_back(-0.0f);
-
 }
 
 void ApplicationSolar::initializeSquad(){
@@ -932,8 +936,6 @@ void ApplicationSolar::initializeSquad(){
   //v3 tex coordinates
   squad.push_back(1.0f);
   squad.push_back(1.0f);
-
-
 }
 
 //load all textures
@@ -947,31 +949,36 @@ void ApplicationSolar::initializeTextures(){
     //load texture file from path
     pixel_data texture = texture_loader::file(m_resource_path + path + ".png");
     //new texture_object for current planet
-    i.second.tex_objs_.push_back(texture_object{});
+    texture_object tex;
 
     //bind texture to texture_object
     glActiveTexture(GL_TEXTURE0);
-    glGenTextures(1, &i.second.tex_objs_[0].handle);
-    glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[0].handle);
+    glGenTextures(1, &tex.handle);
+    glBindTexture(GL_TEXTURE_2D, tex.handle);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
+    
+    m_textures.push_back(tex.handle);
+    i.second.tex_objs_.push_back(tex);
    //if current planet has a normal map, load it too
     if(i.second.has_Normals_){
       pixel_data n_texture = texture_loader::file(m_resource_path + path + "_normal.png");
+      texture_object norm_tex;
       //new texture_object for current planet
-      i.second.tex_objs_.push_back(texture_object{});
       //bind normal map to texture_object
       glActiveTexture(GL_TEXTURE1);
-      glGenTextures(1, &i.second.tex_objs_[1].handle);
-      glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[1].handle);
+      glGenTextures(1, &norm_tex.handle);
+      glBindTexture(GL_TEXTURE_2D, norm_tex.handle);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, n_texture.width, n_texture.height, 0, n_texture.channels, n_texture.channel_type, n_texture.ptr());
+      m_textures.push_back(norm_tex.handle);
+      i.second.tex_objs_.push_back(norm_tex);
     }
   }
 
@@ -984,30 +991,35 @@ void ApplicationSolar::initializeTextures(){
     //load texture from file
     pixel_data texture = texture_loader::file(m_resource_path + path + ".png");
     //new texture object for current moon
-    i.second.tex_objs_.push_back(texture_object{});
+    texture_object tex;
     //bind texture to texture_objec
     glActiveTexture(GL_TEXTURE0);
-    glGenTextures(1, &i.second.tex_objs_[0].handle);
-    glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[0].handle);
+    glGenTextures(1, &tex.handle);
+    glBindTexture(GL_TEXTURE_2D, tex.handle);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture.width, texture.height, 0, texture.channels, texture.channel_type, texture.ptr());
 
+    m_textures.push_back(tex.handle);
+    i.second.tex_objs_.push_back(tex);
     if(i.second.has_Normals_){
       pixel_data n_texture = texture_loader::file(m_resource_path + path + "_normal.png");
       //new texture_object for current planet
-      i.second.tex_objs_.push_back(texture_object{});
+      texture_object norm_tex;
       //bind normal map to texture_object
       glActiveTexture(GL_TEXTURE1);
-      glGenTextures(1, &i.second.tex_objs_[1].handle);
-      glBindTexture(GL_TEXTURE_2D, i.second.tex_objs_[1].handle);
+      glGenTextures(1, &norm_tex.handle);
+      glBindTexture(GL_TEXTURE_2D, norm_tex.handle);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, n_texture.width, n_texture.height, 0, n_texture.channels, n_texture.channel_type, n_texture.ptr());
+    
+      m_textures.push_back(norm_tex.handle);
+      i.second.tex_objs_.push_back(norm_tex);
     }
   }
 
@@ -1036,6 +1048,24 @@ ApplicationSolar::~ApplicationSolar() {
   glDeleteBuffers(1, &orbit_object.vertex_BO);
   glDeleteBuffers(1, &orbit_object.element_BO);
   glDeleteVertexArrays(1, &orbit_object.vertex_AO);
+
+  glDeleteBuffers(1, &squad_object.vertex_BO);
+  glDeleteBuffers(1, &squad_object.element_BO);
+  glDeleteVertexArrays(1, &squad_object.vertex_AO);
+
+  glDeleteTextures(m_textures.size(), m_textures.data());
+  glDeleteTextures(1, &m_texture_object.handle);
+  glDeleteTextures(1, &sky_texture_object.handle);
+  glDeleteTextures(1, &light_texture_object.handle);
+
+  glDeleteFramebuffers(1, &m_framebuffer_object.handle);
+  glDeleteFramebuffers(1, &light_framebuffer_object.handle);
+
+  glDeleteRenderbuffers(1, &m_renderbuffer_object.handle);
+  glDeleteRenderbuffers(1, &light_renderbuffer_object.handle);
+
+  glDeleteBuffers(1, &ubo_camera.handle);
+
 }
 
 // exe entry point

@@ -83,19 +83,19 @@ class ApplicationSolar : public Application {
 
   texture_object sky_texture_object;
 
+  float camRotationX;
   cameraBuffer m_cameraBuffer;
-  lightBuffer m_lightBuffer;
   texture_object ubo_camera;
-  texture_object ubo_light;
 
+  std::vector<GLuint> m_textures;
   // planet, moon, star and orbit representations
   std::map<std::string, planet> planets;
   std::map<std::string, moon> moons;
   std::vector<float> stars;
   std::vector<float> orbit;
   std::vector<float> squad;
-
   mutable glm::fmat4 model_matrix_sun;
+
 
   bool m_greyscale = false;
   bool m_mirrored_v = false;
