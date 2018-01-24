@@ -1,8 +1,11 @@
 #version 150
 
 uniform sampler2D ColorTex;
+uniform sampler2D LightTex;
+uniform vec4 lightPosition;
 uniform bool greyscale;
 uniform bool blur;
+uniform bool scatter;
 
 in vec2 pass_TexCoord;
 in vec4 gl_FragCoord;
@@ -58,7 +61,6 @@ void main() {
 		Color = Color + Color_00 + Color_01 + Color_02 + Color_10 + Color_12 + Color_20 + Color_21 + Color_22;
 	}
 
-
 	if(greyscale){
 
 		float r = Color.x * 0.2126;
@@ -70,6 +72,33 @@ void main() {
 		Color.x = lum;
 		Color.y = lum;
 		Color.z = lum;
+	}
+
+	if(!scatter){
+		/// NUM_SAMPLES will describe the rays quality, you can play with
+		int NUM_SAMPLES = 300;
+
+		float decay=0.9;
+		float exposure=0.2;
+		float density=3.0;
+		float weight=0.35;
+		//lightPos in texture coordinates
+		vec2 lightPos = (lightPosition.xy + vec2(1.0, 1.0))/2;
+		vec2 tc = pass_TexCoord;
+		vec2 deltaTexCoord = (tc - lightPos) / float(NUM_SAMPLES) * density;
+		float illuminationDecay = 1.0;
+
+		vec4 light = texture2D(LightTex, tc);
+
+		for(int i=0; i < NUM_SAMPLES ; i++){
+			tc -= deltaTexCoord;
+			vec4 sample = texture2D(LightTex, tc);
+			sample *= illuminationDecay * weight;
+			light += sample;
+			illuminationDecay *= decay;
+		}
+
+		Color += light * exposure;
 
 	}
 

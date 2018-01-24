@@ -23,7 +23,7 @@ using namespace gl;
 #include <vector>
 #include <math.h>
 
-const glm::fvec3 sun            {1.0f, 0.98039f, 0.75f};
+const glm::fvec3 sun            {0.5f, 0.98039f, 0.75f};
 const glm::fvec3 merkur         {0.69412f, 0.67843f, 0.67843f};
 const glm::fvec3 venus          {0.89020f, 0.73333f, 0.46275};
 const glm::fvec3 earth          {0.41961f, 0.57647f, 0.83922f};
@@ -127,7 +127,7 @@ void ApplicationSolar::render() const {
 
   glBindFramebuffer(GL_FRAMEBUFFER, light_framebuffer_object.handle);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(0.5f, 0.5f, 0.5f, 0.0f);  
+  //glClearColor(0.5f, 0.5f, 0.5f, 0.0f);  
 
    for(auto& i : planets){
     //render planet
@@ -200,23 +200,26 @@ void ApplicationSolar::renderSky() const {
 
 //render screen quad
 void ApplicationSolar::renderSquad() const {
+  //calculate sun position on screen
+  glm::fmat4 m = m_cameraBuffer.ProjectionMatrix * m_cameraBuffer.ViewMatrix * model_matrix_sun;
+  glm::fvec4 lightPos =  m * glm::fvec4{0.0f, 0.0f, 0.0f, 1.0f};
+  lightPos = lightPos/lightPos.z;
+
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   glUseProgram(m_shaders.at("squad").handle);
   //bind texture to shader
   glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+  glUniform1i(m_shaders.at("squad").u_locs.at("ColorTex"), 0);
+
+  glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, light_texture_object.handle);
+  glUniform1i(m_shaders.at("squad").u_locs.at("LightTex"), 1);
 
-  glm::fvec3 lightPos;
-  GLint view;
-  glGetIntegerv(GL_VIEWPORT, &view);
-
-  //gluProject();
-
-  int color_sampler_location = glGetUniformLocation(m_shaders.at("squad").handle, "ColorTex");
-  glUniform1i(color_sampler_location, 0);
+  glUniform4fv(m_shaders.at("squad").u_locs.at("lightPosition"), 1, glm::value_ptr(lightPos));
   // bind the VAO to draw
-   // bind shader to upload uniforms
+  // bind shader to upload uniforms
   glBindVertexArray(squad_object.vertex_AO);
   //draw stars
   glDrawArrays(squad_object.draw_mode, NULL, squad_object.num_elements);  
@@ -530,26 +533,34 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods) 
     else if (key == GLFW_KEY_2 && (action == GLFW_PRESS)) {
       shaderName = "planet_comic";
   }
-  //change shader
+
+    //change mode
+    else if (key == GLFW_KEY_6 && (action == GLFW_PRESS)) {
+      m_scatter = !m_scatter;
+
+      glUseProgram(m_shaders.at("squad").handle);
+      glUniform1i(m_shaders.at("squad").u_locs.at("scatter"), m_scatter);
+  }
+    //change mode
     else if (key == GLFW_KEY_7 && (action == GLFW_PRESS)) {
       m_greyscale = !m_greyscale;
 
       glUseProgram(m_shaders.at("squad").handle);
       glUniform1i(m_shaders.at("squad").u_locs.at("greyscale"), m_greyscale);
   }
-  //change shader
+    //change mode
     else if (key == GLFW_KEY_8 && (action == GLFW_PRESS)) {
       m_mirrored_h = !m_mirrored_h;
 
       glUseProgram(m_shaders.at("squad").handle);
       glUniform1i(m_shaders.at("squad").u_locs.at("mirrored_h"), m_mirrored_h);
-  }
+  }//change mode
     else if (key == GLFW_KEY_9 && (action == GLFW_PRESS)) {
       m_mirrored_v = !m_mirrored_v;
 
       glUseProgram(m_shaders.at("squad").handle);
       glUniform1i(m_shaders.at("squad").u_locs.at("mirrored_v"), m_mirrored_v);
-  }
+  }//change mode
     else if (key == GLFW_KEY_0 && (action == GLFW_PRESS)) {
       m_blur = !m_blur;
 
@@ -657,25 +668,19 @@ void ApplicationSolar::initializeShaderPrograms() {
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  m_shaders.emplace("godray", shader_program{m_resource_path + "shaders/godray.vert",
-                                           m_resource_path + "shaders/godray.frag"});
-  // request uniform locations for shader program
-  m_shaders.at("godray").u_locs["ModelMatrix"] = -1;
-  m_shaders.at("godray").u_locs["ColorTex"] = -1;
-  m_shaders.at("godray").u_locs["lightPosition"] = -1;
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
    // store shader program objects in container
   m_shaders.emplace("squad", shader_program{m_resource_path + "shaders/simple_squad.vert",
                                            m_resource_path + "shaders/simple_squad.frag"});
   // request uniform locations for shader program
   m_shaders.at("squad").u_locs["ColorTex"] = -1;
+  m_shaders.at("squad").u_locs["LightTex"] = -1;
+  m_shaders.at("squad").u_locs["lightPosition"] = -1;
   m_shaders.at("squad").u_locs["greyscale"] = -1;
   m_shaders.at("squad").u_locs["mirrored_v"] = -1;
   m_shaders.at("squad").u_locs["mirrored_h"] = -1;
   m_shaders.at("squad").u_locs["blur"] = -1;
+  m_shaders.at("squad").u_locs["scatter"] = -1;
+
 }
 
 // load models

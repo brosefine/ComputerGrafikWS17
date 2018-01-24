@@ -101,6 +101,7 @@ class ApplicationSolar : public Application {
   bool m_mirrored_v = false;
   bool m_mirrored_h = false;
   bool m_blur = false;
+  bool m_scatter = false;
   
 
   //used shader
