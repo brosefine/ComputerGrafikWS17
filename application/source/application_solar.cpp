@@ -123,6 +123,51 @@ void ApplicationSolar::render() const {
     glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
   }
 
+  std::string temp = shaderName;
+
+  glBindFramebuffer(GL_FRAMEBUFFER, light_framebuffer_object.handle);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(0.5f, 0.5f, 0.5f, 0.0f);  
+
+   for(auto& i : planets){
+    //render planet
+    //upload_orbit_transforms(i.second);
+
+    //glBindVertexArray(orbit_object.vertex_AO);
+    //glDrawArrays(orbit_object.draw_mode, NULL, orbit_object.num_elements);
+
+    if(i.first == "sun"){
+      shaderName = "light";
+    } else {    
+      shaderName = "dark";
+    }
+
+    upload_planet_transforms(i.second);
+    // bind the VAO to draw
+    glBindVertexArray(planet_object.vertex_AO);
+
+    // draw bound vertex array using bound shader
+    glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+  }
+
+  for(auto& i : moons){
+    //render planet
+    //upload_orbit_transforms(i.second);
+
+    //glBindVertexArray(orbit_object.vertex_AO);
+    //glDrawArrays(orbit_object.draw_mode, NULL, orbit_object.num_elements); 
+
+    upload_moon_transforms(i.second);
+
+    // bind the VAO to draw
+    glBindVertexArray(planet_object.vertex_AO);
+
+    // draw bound vertex array using bound shader
+    glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+  }
+
+  shaderName = temp;
+
   glBindVertexArray(0);
   renderSquad();
 }
@@ -160,7 +205,13 @@ void ApplicationSolar::renderSquad() const {
   glUseProgram(m_shaders.at("squad").handle);
   //bind texture to shader
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, m_texture_object.handle);
+  glBindTexture(GL_TEXTURE_2D, light_texture_object.handle);
+
+  glm::fvec3 lightPos;
+  GLint view;
+  glGetIntegerv(GL_VIEWPORT, &view);
+
+  //gluProject();
 
   int color_sampler_location = glGetUniformLocation(m_shaders.at("squad").handle, "ColorTex");
   glUniform1i(color_sampler_location, 0);
@@ -214,6 +265,10 @@ void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
     // extra matrix for normal transformation to keep them orthogonal to surface
     glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("NormalMatrix"),
                        1, GL_FALSE, glm::value_ptr(normal_matrix));
+  } else if (shaderName == "dark" || shaderName == "light"){
+    glUseProgram(m_shaders.at(shaderName).handle);
+    glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
+                       1, GL_FALSE, glm::value_ptr(model_matrix));
   } else {
     //upload matrices to current shader
     glUseProgram(m_shaders.at(shaderName).handle);
@@ -227,9 +282,9 @@ void ApplicationSolar::upload_moon_transforms(moon const& moon) const{
 
 
   //upload either texture or color
- 
-    upload_texture(moon);
-
+ if(shaderName != "dark" && shaderName != "light"){
+      upload_texture(moon);
+  }
   
 }
 
@@ -257,6 +312,10 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
     // extra matrix for normal transformation to keep them orthogonal to surface
     glUniformMatrix4fv(m_shaders.at("planet_normal_tex").u_locs.at("NormalMatrix"),
                        1, GL_FALSE, glm::value_ptr(normal_matrix));
+  } else if (shaderName == "dark" || shaderName == "light"){
+    glUseProgram(m_shaders.at(shaderName).handle);
+    glUniformMatrix4fv(m_shaders.at(shaderName).u_locs.at("ModelMatrix"),
+                       1, GL_FALSE, glm::value_ptr(model_matrix));
   } else {
     //upload matrices to current shader
     glUseProgram(m_shaders.at(shaderName).handle);
@@ -270,8 +329,9 @@ void ApplicationSolar::upload_planet_transforms(planet const& planet) const{
 
 
   //upload either texture or color
-  
+  if(shaderName != "dark" && shaderName != "light"){
       upload_texture(planet);
+  }
   
 }
 
@@ -288,6 +348,8 @@ void ApplicationSolar::upload_sun_transforms(planet const& sun) const{
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f*d});
   model_matrix = glm::scale(model_matrix, glm::fvec3{s, s, s});
   model_matrix = glm::rotate(model_matrix, float(0.1f * glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
+
+  model_matrix_sun = model_matrix;
 
   //upload matrices to sun shader
   glUseProgram(m_shaders.at("sun").handle);
@@ -416,6 +478,9 @@ void ApplicationSolar::uploadUniforms() {
   prog_handles.push_back(m_shaders.at("orbit").handle);
   prog_handles.push_back(m_shaders.at("sun").handle);
   prog_handles.push_back(m_shaders.at("sky").handle);
+  prog_handles.push_back(m_shaders.at("light").handle);
+  prog_handles.push_back(m_shaders.at("dark").handle);
+
 
   for(auto i : prog_handles){
     GLuint location = glGetUniformBlockIndex(i, "CameraBlock");
@@ -574,6 +639,34 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("orbit").u_locs["ModelMatrix"] = -1;
   m_shaders.at("orbit").u_locs["CameraBlock"] = -1;
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  m_shaders.emplace("light", shader_program{m_resource_path + "shaders/yang.vert",
+                                           m_resource_path + "shaders/yang.frag"});
+  // request uniform locations for shader program
+  m_shaders.at("light").u_locs["ModelMatrix"] = -1;
+  m_shaders.at("light").u_locs["CameraBlock"] = -1;
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  m_shaders.emplace("dark", shader_program{m_resource_path + "shaders/yin.vert",
+                                           m_resource_path + "shaders/yin.frag"});
+  // request uniform locations for shader program
+  m_shaders.at("dark").u_locs["ModelMatrix"] = -1;
+  m_shaders.at("dark").u_locs["CameraBlock"] = -1;
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  m_shaders.emplace("godray", shader_program{m_resource_path + "shaders/godray.vert",
+                                           m_resource_path + "shaders/godray.frag"});
+  // request uniform locations for shader program
+  m_shaders.at("godray").u_locs["ModelMatrix"] = -1;
+  m_shaders.at("godray").u_locs["ColorTex"] = -1;
+  m_shaders.at("godray").u_locs["lightPosition"] = -1;
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
    // store shader program objects in container
   m_shaders.emplace("squad", shader_program{m_resource_path + "shaders/simple_squad.vert",
                                            m_resource_path + "shaders/simple_squad.frag"});
@@ -730,6 +823,17 @@ void ApplicationSolar::initializeFramebufferHandles(){
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, GLsizei(1920u), GLsizei(1080u), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+  glGenRenderbuffers(1, &light_renderbuffer_object.handle);
+  glBindRenderbuffer(GL_RENDERBUFFER, light_renderbuffer_object.handle);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, GLsizei(1920u), GLsizei(1080u));
+
+  glActiveTexture(GL_TEXTURE0);
+  glGenTextures(1, &light_texture_object.handle);
+  glBindTexture(GL_TEXTURE_2D, light_texture_object.handle);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, GLsizei(1920u), GLsizei(1080u), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 }
 
 void ApplicationSolar::initializeFramebuffer(){
@@ -744,6 +848,20 @@ void ApplicationSolar::initializeFramebuffer(){
   glDrawBuffers(1, draw_buffers);
 
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if(status != GL_FRAMEBUFFER_COMPLETE) {std::cout << "ooooops" << std::endl;}
+
+  //Framebuffer for God Rays
+  glGenFramebuffers(1, &light_framebuffer_object.handle);
+  glBindFramebuffer(GL_FRAMEBUFFER, light_framebuffer_object.handle); 
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
+                        light_texture_object.handle, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
+                        GL_RENDERBUFFER, light_renderbuffer_object.handle);
+
+  GLenum light_draw_buffers[1] = {GL_COLOR_ATTACHMENT1};
+  glDrawBuffers(1, light_draw_buffers);
+
+  status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if(status != GL_FRAMEBUFFER_COMPLETE) {std::cout << "ooooops" << std::endl;}
 }
 

@@ -79,6 +79,7 @@ struct moon : public planet {
   std::string planet_name_;
 };
 
+
 struct cameraBuffer {
   glm::fmat4 ViewMatrix;
   glm::fmat4 ProjectionMatrix;

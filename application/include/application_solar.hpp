@@ -72,9 +72,15 @@ class ApplicationSolar : public Application {
   model_object orbit_object;
   model_object squad_object;
 
+  //object handles for offscreen rendering
   texture_object m_texture_object;
   texture_object m_renderbuffer_object;
   texture_object m_framebuffer_object;
+  //object handles for godrays
+  texture_object light_texture_object;
+  texture_object light_renderbuffer_object;
+  texture_object light_framebuffer_object;
+
   texture_object sky_texture_object;
 
   cameraBuffer m_cameraBuffer;
@@ -89,6 +95,8 @@ class ApplicationSolar : public Application {
   std::vector<float> orbit;
   std::vector<float> squad;
 
+  mutable glm::fmat4 model_matrix_sun;
+
   bool m_greyscale = false;
   bool m_mirrored_v = false;
   bool m_mirrored_h = false;
@@ -96,7 +104,7 @@ class ApplicationSolar : public Application {
   
 
   //used shader
-  std::string shaderName = "planet_comic";
+  mutable std::string shaderName = "planet_comic";
 
 };
 
