@@ -76,12 +76,12 @@ void main() {
 
 	if(!scatter){
 		/// NUM_SAMPLES will describe the rays quality, you can play with
-		int NUM_SAMPLES = 300;
+		int NUM_SAMPLES = 250;
 
 		float decay=0.9;
 		float exposure=0.2;
-		float density=3.0;
-		float weight=0.35;
+		float density=5.0;
+		float weight=0.55;
 		//lightPos in texture coordinates
 		vec2 lightPos = (lightPosition.xy + vec2(1.0, 1.0))/2;
 		vec2 tc = pass_TexCoord;
