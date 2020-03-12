@@ -1,3 +1,8 @@
+## Solar System created in the Computer Graphics Lecture
+Application based on the OpenGL Framework provided by the Lecturers and Tutors
+
+![](solarsystem.gif)
+
 ## OpenGLFramework
 is a small cross-platform framework for learning OpenGL programming
 
